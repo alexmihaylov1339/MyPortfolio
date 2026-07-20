@@ -1,0 +1,39 @@
+// Color palette
+$error-red: #dc2626;
+$success-bg: #d4edda;
+$success-text: #155724;
+$success-border: #0f4419;
+
+// Spinner colors
+$spinner-border: rgba(0, 0, 0, 0.1);
+$spinner-active: #3b82f6;
+
+// Text colors
+$text-gray: #666;
+
+// Background colors
+$bg-light: rgba(0, 0, 0, 0.05);
+$bg-white: #ffffff;
+
+// Border colors
+$border-light: rgba(0, 0, 0, 0.2);
+
+// Notification colors
+// Error
+$error-bg: #f8d7da;
+$error-text: #721c24;
+$error-border: $error-red;
+
+// Info
+$info-bg: #d1ecf1;
+$info-text: #0c5460;
+$info-border: #17a2b8;
+
+// Warning
+$warning-bg: #fff3cd;
+$warning-text: #856404;
+$warning-border: #ffc107;
+
+// Shadows
+$shadow-notification: 0 4px 12px rgba(0, 0, 0, 0.15);
+
