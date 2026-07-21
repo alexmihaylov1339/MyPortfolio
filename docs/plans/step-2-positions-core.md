@@ -91,7 +91,7 @@ Acceptance:
 
 ---
 
-### T3 - Positions CRUD contract
+### T3 - Positions CRUD contract — Done
 
 Tasks:
 - Routes: `POST /positions`, `GET /positions` (optional `status` filter), `GET /positions/:id`, `PATCH /positions/:id`, `DELETE /positions/:id`.
@@ -102,6 +102,14 @@ Tasks:
 Acceptance:
 - Full CRUD works via authenticated requests.
 - A user cannot read/edit/delete another user's position.
+
+**Verification completed:**
+- Added `positions/dto/{create-position,update-position,list-positions}.dto.ts` (plain interfaces — shape only), `positions-errors.ts`, `positions-validation.ts` (mirrors `auth-validation.ts`'s pattern of exported validate functions throwing `BadRequestException`), and `positions.helpers.ts` (`toPositionResponse` — explicit `.toString()` on both `Decimal` fields and ISO strings on all `Date` fields, called once from the service, mirrors `auth.helpers.ts`'s `publicUser`).
+- Service (`positions.service.ts`) implements `findAllForUser` (optional status filter), `findOneForUser`, `create`, `update`, `remove`, all routed through a private `getOwnedPositionOrThrow` that throws `NotFoundException` — not `ForbiddenException` — when a position doesn't exist *or* belongs to another user, so non-owners can't distinguish the two cases.
+- Controller stays thin: parses params/query/body, calls the matching `validate*` function, delegates to the service, no Prisma access.
+- Known simplification (documented here, not silently decided): the "`closedAt` required when `status = CLOSED`" rule is enforced per-request on `PATCH` — if the payload sets `status: CLOSED`, that same payload must include `closedAt`, even if the record already has one from a prior close. Re-closing a previously-closed-then-reopened position requires resending `closedAt`. Acceptable for T3's scope; revisit only if it causes real friction.
+- `npm run build`, `npm run lint`, `npm test` (7/7) all pass.
+- Full live smoke test against Supabase with two real users (created via `/auth/register`, deleted after): invalid broker → `400`; `CLOSED` without `closedAt` → `400`; valid create → `200` with `quantity`/`averageBuyPrice` as strings, `ticker` uppercased; list → array with the item; owner `GET /:id` → `200`; non-owner `GET /:id` → `404 "Position not found"`; non-owner `PATCH` → `404`; owner `PATCH` (quantity) → `200` updated; close without `closedAt` → `400`; close with `closedAt` → `200`, `status: CLOSED`; `?status=OPEN` → `[]`; `?status=CLOSED` → the item; non-owner `DELETE` → `404`; owner `DELETE` → `204`; subsequent `GET` → `404`.
 
 ---
 
