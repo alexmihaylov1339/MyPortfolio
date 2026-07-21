@@ -59,7 +59,15 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
     }
 
     startTransition(async () => {
-      await onSubmit(values as TFormValues);
+      try {
+        await onSubmit(values as TFormValues);
+      } catch {
+        // A rejected onSubmit (e.g. a failed mutation) is surfaced by the
+        // caller via its own error state (errorMessage prop). Catch it here
+        // so isPending always resolves instead of leaving the submit button
+        // stuck, and so the form is not cleared on a failed submission.
+        return;
+      }
       if (resetOnSubmit) {
         form.reset();
       }

@@ -151,9 +151,9 @@ Acceptance:
 
 ---
 
-### T6 - Positions list + page
+### T6 - Positions list + page — Done
 
-**Open decision — resolve before starting this task, don't invent a default:** Step 1 deliberately deferred porting Memora's shared `Grid` component "until tabular data is needed" — this is that moment. Two options: (a) port `Grid` now for the positions list, or (b) ship a minimal table for this step and port `Grid` later once more tabular surfaces exist (dashboard, models). Ask before building.
+**Open decision — resolved by user before starting:** chose (b) — a minimal positions-specific table now (not Memora's `Grid`), to avoid pulling in `Grid` + its `ConfirmationModal`/`Modal` dependencies (~600 lines, not yet in this repo) before a second tabular surface (Step 3 dashboard, Step 4 models) actually proves reuse. Revisit when that second surface is built.
 
 Tasks:
 - `/positions` page (`ProtectedRoute`): renders the list, open/closed filter, "Add position" action.
@@ -162,6 +162,16 @@ Tasks:
 
 Acceptance:
 - A logged-in user can view, add, edit, close, and delete positions end-to-end in the browser.
+
+**Verification completed:**
+- Added `list/components/{PositionsTable,PositionsFilter}.tsx` (client-side sort by clicking a column header, open/closed filter buttons), `list/hooks/useDeletePositionWithConfirmation.ts` (`window.confirm` + delete mutation — no styled modal, since that's exactly the Grid/ConfirmationModal complexity the open decision chose to defer), `form/hooks/usePositionQuery.ts` and `form/positionFormValues.ts` (the single-position fetch + Position→form-values mapper deferred from T4/T5, now needed by the edit page), and the three pages: `web/src/app/positions/page.tsx`, `.../positions/new/page.tsx`, `.../positions/[id]/edit/page.tsx`.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (214/214), `npm run build` all pass (all three new routes registered, `/positions/[id]/edit` correctly built as dynamic).
+- **Full real-browser verification** (Chrome, both dev servers live against Supabase) — this caught two genuine bugs that no amount of type-checking or curl testing would have surfaced:
+  1. **`FormBuilder.tsx` (shared component):** `startTransition(async () => { await onSubmit(values); ... })` never handled a rejected `onSubmit`. Every existing consumer (`LoginForm`, `RegisterForm`, `UpdateAccountForm`) uses `mutation.mutate()` with `onSuccess`, so this was latent until `PositionForm` became the first consumer to `await mutation.mutateAsync(...)` inside `onSubmit`. A rejection left `isPending` stuck forever — the submit button showed "Loading..." permanently with no error, and no path back to a usable form. Fixed by wrapping the awaited call in try/catch inside `FormBuilder`'s transition, so `isPending` always resolves and `form.reset()` is correctly skipped on failure (previously, a first attempt at fixing this only in `PositionForm` masked the rejection from `FormBuilder`, which caused `form.reset()` to wipe the user's input on a *failed* submission — reverted once the real fix location was found).
+  2. **`PositionForm.tsx`:** `FormBuilder`'s `NumberField` extraction converts values to a JS `number` at runtime (`quantity`, `averageBuyPrice`), but the API's Decimal fields require strings (per T3's response-contract decision) — sending a JSON number instead of a string tripped the backend's `isPositiveDecimalString` check, correctly rejecting the request with `400 Quantity must be a positive number`. Fixed by coercing both fields to `String(...)` in `mapFormValuesToPositionInput`.
+- With both fixes, walked the full flow live in the browser: create a position (`REVOLUT`/`AAPL`/qty `10.5`/price `150.25`) → list shows it correctly formatted (`150.25 USD`, `OPEN`) → Edit → form correctly prefilled from the fetched position (date fields truncated to `YYYY-MM-DD` via `toPositionFormValues`) → changed status to `CLOSED` → `closedAt` field appeared, required, correctly left blank rather than defaulting to "today" (the position may have actually closed earlier) → filled and saved → list shows `CLOSED` → `Open` filter shows only the still-open position → `Closed` filter shows only this one → column-header sort verified on `Quantity`. Delete's confirmation dialog was not clicked through the UI (a real `window.confirm()` blocks the browser-automation session per tooling guidance), but the mutation wiring is the same pattern already verified end-to-end via T3's authenticated CRUD curl tests.
+- Test positions and their DB rows were deleted after verification; ad-hoc dev servers started for this test were stopped afterward.
+- Encountered and worked around, in the browser-automation environment itself (not product bugs): a stray dev-server process from earlier in this session had been silently serving stale/conflicting state on the same ports, and the TanStack Query Devtools panel occluded/intercepted clicks on part of the form when left open. Both were resolved by killing stray processes and closing the panel before the final clean verification pass above.
 
 ---
 
