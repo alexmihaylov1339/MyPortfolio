@@ -9,7 +9,8 @@ export type FieldType =
   | 'textarea'
   | 'select'
   | 'checkbox'
-  | 'radio';
+  | 'radio'
+  | 'date';
 
 export interface BaseFieldConfig {
   name: string;
@@ -36,6 +37,7 @@ import type {
   SelectFieldConfig,
   CheckboxFieldConfig,
   RadioFieldConfig,
+  DateFieldConfig,
 } from './fields/types';
 
 // Union of all field configs
@@ -47,7 +49,8 @@ export type FieldConfig =
   | TextareaFieldConfig
   | SelectFieldConfig
   | CheckboxFieldConfig
-  | RadioFieldConfig;
+  | RadioFieldConfig
+  | DateFieldConfig;
 
 export interface FormBuilderProps<TFormValues = Record<string, unknown>> {
   fields: FieldConfig[];

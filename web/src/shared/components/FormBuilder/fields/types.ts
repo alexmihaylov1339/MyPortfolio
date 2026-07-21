@@ -7,5 +7,6 @@ export type { TextareaFieldConfig } from './TextareaField/types';
 export type { SelectFieldConfig } from './SelectField/types';
 export type { CheckboxFieldConfig } from './CheckboxField/types';
 export type { RadioFieldConfig } from './RadioField/types';
+export type { DateFieldConfig } from './DateField/types';
 
 

@@ -132,7 +132,7 @@ Acceptance:
 
 ---
 
-### T5 - Position form
+### T5 - Position form — Done
 
 Tasks:
 - Build via `FormBuilder` (mandatory per frontend patterns) — one form, reused for both create and edit via `initialValues`.
@@ -140,6 +140,14 @@ Tasks:
 
 Acceptance:
 - Create and edit both route through the same form component.
+
+**Verification completed:**
+- **Extended the shared `FormBuilder`, not worked around it:** the field-type union had no `date` option (`text`/`email`/`password`/`number`/`textarea`/`select`/`checkbox`/`radio`), so `openedAt`/`closedAt` had no way to render as real date inputs. Added `DateField` (mirrors `TextField`'s exact structure/styling, `type="date"` input) and wired it into `fields/index.ts`, `fields/types.ts`, `fields/Field.tsx`'s switch, and `FormBuilder/types.ts`'s `FieldType`/`FieldConfig` unions. This is a shared building block gap, not a positions-specific concern — any future date field in the app benefits.
+- **Conditional `closedAt` visibility** without adding an `onChange`-per-field escape hatch to `FormBuilder` itself: `PositionForm` tracks `status` in local state and wraps `<FormBuilder>` in a `<div onChange={...}>` — the native `change` event from the internal `<select name="status">` bubbles up through React's synthetic event system to that ancestor regardless of component boundaries, so no `FormBuilder` API change was needed. `usePositionFormFields(status)` (in `form/hooks/`) returns the field list and only appends the `closedAt` field (marked `required`) when `status === 'CLOSED'`.
+- `PositionForm` (`form/components/`) takes `mode: 'create' | 'edit'`, an optional `positionId`, and `initialValues`; calls the matching T4 mutation hook internally and navigates to `/positions` (added to `APP_ROUTES` — also needed by T6) on success.
+- Added `CURRENCY_OPTIONS` (USD/EUR/GBP) to `positions/constants/options.ts` — currency is a select, not free text, to avoid inconsistent codes.
+- **Scope decision, documented not silently assumed:** `PositionForm`'s `initialValues` prop expects already form-ready values (dates as `YYYY-MM-DD`, not the API's full ISO datetime strings) — mapping a fetched `Position` into that shape is left to T6, which is the first task that actually fetches one. This mirrors T4's decision to defer the single-position query hook to T6.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (214/214), `npm run build` all pass. No page renders `PositionForm` yet (T6), so full interactive/browser verification (including the conditional `closedAt` behavior) happens once T6 wires up `/positions/new` and `/positions/[id]/edit`.
 
 ---
 

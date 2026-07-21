@@ -8,4 +8,7 @@ export const APP_ROUTES = {
   resetPassword: '/reset-password',
   resetPasswordWithToken: (token: string) =>
     `/reset-password?token=${encodeURIComponent(token)}`,
+  positions: '/positions',
+  newPosition: '/positions/new',
+  positionEdit: (id: string) => `/positions/${id}/edit`,
 } as const;
