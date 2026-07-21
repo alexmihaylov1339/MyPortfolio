@@ -72,7 +72,7 @@ Acceptance:
 
 ---
 
-### T2 - Backend positions module scaffolding
+### T2 - Backend positions module scaffolding — Done
 
 Tasks:
 - Create `PositionsModule`, register it in `app.module.ts`.
@@ -81,6 +81,13 @@ Tasks:
 Acceptance:
 - App builds and boots with the module wired.
 - Unauthenticated requests to any `/positions` route return `401`.
+
+**Verification completed:**
+- Added `api/src/positions/{positions.service.ts, positions.controller.ts, positions.module.ts}`. Service has one method so far, `findAllForUser(userId)`, scoped by `userId` via Prisma `where` — a real, useful seed rather than a throwaway stub, extended by T3 into the full CRUD contract rather than replaced.
+- Controller applies `@UseGuards(AuthGuard)` at the class level (same pattern as `AuthController`'s protected routes) and reads the user via the existing `@CurrentUser()` decorator — no new auth mechanism introduced.
+- `PositionsModule` imports `AuthModule` to resolve `AuthGuard`'s `JwtService` dependency (mirrors how `AuthGuard` is already provided/exported there); registered in `app.module.ts`.
+- `npm run build` passes.
+- Booted the built app: `RoutesResolver` logs `PositionsController {/v1/positions}` and `Mapped {/v1/positions, GET} route`. `GET /v1/positions` with no `Authorization` header returns `401 {"message":"Missing Bearer token", ...}`. Health endpoint still reports `db: connected`.
 
 ---
 
