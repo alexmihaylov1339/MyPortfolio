@@ -170,6 +170,29 @@ describe('FormBuilder', () => {
       expect(input.value).toBe('john_doe');
     });
 
+    it('recovers from a rejected onSubmit instead of leaving the button stuck loading, and does not reset the form', async () => {
+      const fields: FieldConfig[] = [
+        { type: 'text', name: 'username', label: 'Username' },
+      ];
+      const onSubmit = jest.fn().mockRejectedValue(new Error('save failed'));
+
+      render(<FormBuilder fields={fields} onSubmit={onSubmit} />);
+
+      const input = screen.getByLabelText('Username') as HTMLInputElement;
+      fireEvent.change(input, { target: { value: 'john_doe' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+      });
+
+      expect(input.value).toBe('john_doe');
+    });
+
     it('calls onDelete when delete button is clicked', async () => {
       const fields: FieldConfig[] = [
         { type: 'text', name: 'username', label: 'Username' },

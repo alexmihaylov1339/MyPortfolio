@@ -1,6 +1,6 @@
 # MyPortfolio: Step 2 Plan - Positions Core
 
-**Status:** Ready  
+**Status:** Complete — all T1-T7 done and verified (build/lint/test in both packages, plus a full live-browser walkthrough of create/edit/close/filter/sort)  
 **Date:** 2026-07-21  
 **Roadmap ref:** `docs/plans/portfolio-roadmap.md` → Step 2
 
@@ -175,7 +175,7 @@ Acceptance:
 
 ---
 
-### T7 - Tests (only where they earn their keep)
+### T7 - Tests (only where they earn their keep) — Done
 
 Tasks:
 - Step 2 is CRUD + form plumbing, not calculation — per the roadmap's testing philosophy, default to **no new component/hook/service tests**.
@@ -183,6 +183,15 @@ Tasks:
 
 Acceptance:
 - `npm --prefix api test` and `npm --prefix web test` still pass; no tests added purely for coverage.
+
+**Verification completed:**
+- **Backend — `api/src/positions/positions-validation.spec.ts` (new, 17 tests):** exercises exactly the branching the plan called out — `closedAt`-required-when-`CLOSED` on both create and update, positive-decimal-string parsing (`0`, `-5`, `abc`, `''` all rejected), broker/status enum validation, and the list-query status filter. No tests added for the service (Prisma CRUD), controller (route wiring), or `positions.helpers.ts` (pure serialization, not calculation) — plumbing, per policy.
+- **Frontend — two regression tests for the two real bugs T6's browser verification found and fixed, per the testing philosophy's "always add a regression test when fixing a real bug" rule:**
+  - `FormBuilder.test.tsx`: added a case asserting a rejected `onSubmit` leaves the submit button enabled (not stuck on "Loading...") and does not clear the form — pins down the exact `startTransition`/rejection bug found live in Chrome.
+  - `mapFormValuesToPositionInput.test.ts` (new file — extracted the function out of `PositionForm.tsx` into its own module specifically so it's testable without rendering the component, per the "extract calculation into a pure helper" pattern): asserts `quantity`/`averageBuyPrice` are coerced to strings even when handed a JS `number` (the exact shape `FormBuilder`'s `NumberField` produces), plus a small check that empty-string optional fields normalize to `undefined`.
+- No tests added for `PositionsTable`/`PositionsFilter` rendering, the query/mutation hooks, or the three new pages — component rendering and CRUD wiring, per policy.
+- `cd api && npm run build && npm test` → 4 suites, **24/24 tests** passing (up from 7; all 17 new).
+- `cd web && npx tsc --noEmit && npm run lint && npm test && npm run build` → 16 suites, **217/217 tests** passing (up from 214; 3 new), lint clean, build clean.
 
 ---
 
