@@ -52,7 +52,7 @@ Out of scope:
 
 ## Step-by-step tasks
 
-### T1 - Prisma `Position` model + migration
+### T1 - Prisma `Position` model + migration — Done
 
 Tasks:
 - Add enums: `Broker` (`REVOLUT`, `IBKR`), `PositionStatus` (`OPEN`, `CLOSED`), `AssetType` (`STOCK`, `ETF`).
@@ -62,6 +62,13 @@ Tasks:
 
 Acceptance:
 - `prisma validate` passes; migration applied to Supabase; `User` ↔ `Position` relation compiles; `npx prisma generate` succeeds.
+
+**Verification completed:**
+- `prisma validate` → schema valid.
+- Migration `20260721000000_add_position` generated offline via `prisma migrate diff --from-schema-datamodel /tmp/schema-before.prisma --to-schema-datamodel prisma/schema.prisma --script` (the from/to-datamodel form needs no DB connection, unlike `--from-migrations` + `--shadow-database-url`, which hung against the pgbouncer pooler and had to be abandoned).
+- Applied over port 6543 with a `pg` client and recorded in `_prisma_migrations` (checksum-matched), same workaround as the Step 1 init migration. `Position` table confirmed live in Supabase alongside `User` and `_prisma_migrations`.
+- `npx prisma generate` succeeded; `p.position.findMany` and `p.user.findMany` both resolve on the generated client.
+- `npm run build` and `npm test` (7/7) pass in `api/` with the new model in place.
 
 ---
 

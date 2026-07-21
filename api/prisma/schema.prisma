@@ -18,4 +18,49 @@ model User {
   passwordResetExpiresAt DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+
+  positions              Position[]
+}
+
+enum Broker {
+  REVOLUT
+  IBKR
+}
+
+enum PositionStatus {
+  OPEN
+  CLOSED
+}
+
+enum AssetType {
+  STOCK
+  ETF
+}
+
+/** A manually entered investment position (open or closed) owned by a user */
+model Position {
+  id              String         @id @default(cuid())
+  userId          String
+
+  broker          Broker
+  ticker          String
+  name            String?
+  assetType       AssetType      @default(STOCK)
+
+  quantity        Decimal
+  averageBuyPrice Decimal
+  currency        String         @default("USD")
+
+  status          PositionStatus @default(OPEN)
+  openedAt        DateTime       @default(now())
+  closedAt        DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, ticker])
 }
