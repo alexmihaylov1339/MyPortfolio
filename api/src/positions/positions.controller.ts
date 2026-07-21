@@ -38,6 +38,11 @@ export class PositionsController {
     return this.positions.findAllForUser(user.id, status);
   }
 
+  @Get('summary')
+  getSummary(@CurrentUser() user: AuthUser) {
+    return this.positions.getSummaryForUser(user.id);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.positions.findOneForUser(user.id, id);

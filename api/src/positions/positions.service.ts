@@ -3,6 +3,10 @@ import type { PositionStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { POSITION_ERROR_MESSAGES } from './positions-errors';
+import {
+  calculatePositionsSummary,
+  type PositionsSummaryResponse,
+} from './positions-summary';
 import type {
   ValidatedPositionInput,
   ValidatedPositionUpdateInput,
@@ -23,6 +27,14 @@ export class PositionsService {
     });
 
     return positions.map(toPositionResponse);
+  }
+
+  async getSummaryForUser(userId: string): Promise<PositionsSummaryResponse> {
+    const positions = await this.prisma.position.findMany({
+      where: { userId },
+    });
+
+    return calculatePositionsSummary(positions);
   }
 
   async findOneForUser(userId: string, id: string): Promise<PositionResponse> {

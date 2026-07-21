@@ -113,7 +113,7 @@ Acceptance:
 
 ---
 
-### T3 - Backend endpoint
+### T3 - Backend endpoint — Done
 
 Tasks:
 - `GET /positions/summary` on `PositionsController` (auth-protected, `CurrentUser`-scoped) — placed before `GET /positions/:id` in the controller so the literal `summary` path isn't swallowed by the `:id` param route.
@@ -121,6 +121,11 @@ Tasks:
 
 Acceptance:
 - Authenticated request returns a correct, user-scoped summary; verified against real data (curl, matching the T3-of-Step-2 verification style).
+
+**Verification completed:**
+- Added `PositionsService.getSummaryForUser(userId)` (fetches all of the user's positions regardless of status, delegates to `calculatePositionsSummary`) and `PositionsController`'s `GET /positions/summary`, declared before `GET /positions/:id` — confirmed via the boot log that Nest registers `Mapped {/v1/positions/summary, GET}` ahead of `Mapped {/v1/positions/:id, GET}`, so `summary` resolves as a literal path, not the `:id` param.
+- `npm run build` and `npm test` (30/30, unchanged — no new unit tests needed here, this route is thin wiring over an already-tested pure function) pass.
+- Full live verification against Supabase: zero positions → `{"currencies":[],"positionCounts":{"open":0,"closed":0}}`; created 2 USD-open + 1 EUR-open + 1 USD-closed position → summary correctly grouped EUR/USD separately, 50/50 split for the two USD tickers, `positionCounts: {open: 3, closed: 1}`; unauthenticated request → `401`; a second, unrelated user → sees their own empty summary, not the first user's data (ownership scoping confirmed at the endpoint level, not just via `getOwnedPositionOrThrow` which this route doesn't even call — `getSummaryForUser` scopes by `userId` in the Prisma `where` directly). Test users and their cascaded positions deleted afterward.
 
 ---
 
