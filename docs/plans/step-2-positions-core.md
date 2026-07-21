@@ -113,7 +113,7 @@ Acceptance:
 
 ---
 
-### T4 - Frontend positions service + hooks
+### T4 - Frontend positions service + hooks — Done
 
 Tasks:
 - `positions.service.ts` using `ManageService`, mirroring the shape of `features/auth/services/auth.service.ts`.
@@ -122,6 +122,13 @@ Tasks:
 
 Acceptance:
 - Hooks compile and are usable from a page; no component fetches directly.
+
+**Verification completed:**
+- Added `positions/constants/{endpoints,options}.ts`, `positions/services/positions.service.ts` (five functions: `listPositions`, `getPosition`, `createPosition`, `updatePosition`, `deletePosition`, all through `ManageService` + the existing `getAuthHeaders()` helper rather than manually threading a token like the auth service does — positions is always behind `ProtectedRoute`, so this is simpler and still consistent).
+- Hooks placed per the plan's proposed structure — `list/hooks/` (`usePositionsQuery`, `useDeletePositionMutation`) and `form/hooks/` (`useCreatePositionMutation`, `useUpdatePositionMutation`) — each with an `index.ts` public API, matching how `features/auth/login/hooks/` etc. are colocated.
+- All mutations invalidate the `['positions']` query key on success so the list stays fresh after create/update/delete.
+- A single-position fetch hook (needed by T6's edit page to prefill `initialValues`) was deliberately **not** added here — it's out of T4's listed scope and belongs to T6 where it's actually consumed.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (214/214), and `npm run build` all pass. No page yet imports these hooks (that's T6), so "usable from a page" is proven by clean isolated compilation now and will be fully exercised once T6 lands.
 
 ---
 
