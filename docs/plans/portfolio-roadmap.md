@@ -44,6 +44,7 @@ Full rules: `docs/architecture/backend-patterns.md` → Testing, `docs/architect
 | 3 | Portfolio Dashboard | Proposed | `feat/step3-portfolio-dashboard` | `step-3-portfolio-dashboard.md` |
 | 4 | Model Portfolio | Proposed | `feat/step4-model-portfolio` | `step-4-model-portfolio.md` |
 | 5 | Rebalance Comparison | Proposed (future) | `feat/step5-rebalance-comparison` | `step-5-rebalance-comparison.md` |
+| 6 | Market Prices & Real P&L | Proposed (future) | `feat/step6-market-prices` | `step-6-market-prices.md` |
 
 Branch convention: `feat/step<N>-<slug>` (no hyphen between `step` and the number). Step 1 was foundational scaffolding built directly on `main`; from Step 2 onward, each step gets its own branch.
 
@@ -82,6 +83,14 @@ Branch convention: `feat/step<N>-<slug>` (no hyphen between `step` and the numbe
 **Deliverables:** pure diff calculation (actual % vs target % vs difference, overweight/underweight) and a `/rebalance` surface showing it, later with suggested buy/sell amounts.
 
 **Why later:** depends on both Step 2 (real data) and Step 4 (target data) being stable first.
+
+### Step 6: Market Prices & Real P&L (future)
+
+**Objective:** replace cost-basis-only totals with real current value and unrealized P&L.
+
+**Deliverables:** one free-tier price API (working choice: Twelve Data) integrated behind a single swappable service, with caching and rate-limit-safe fallback; dashboard extended with current value and unrealized P&L.
+
+**Why later:** the dashboard (Step 3) already works from cost basis alone; this is a refinement layered on top once positions and the dashboard calculations are stable.
 
 ---
 

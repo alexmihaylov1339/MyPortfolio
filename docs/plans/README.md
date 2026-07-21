@@ -9,7 +9,7 @@ This folder holds **implementation plans** for MyPortfolio (decisions, scope, fi
 - To execute a step task, use the `.claude/commands/step-task-executor.md` slash command (e.g. "do T3 from step-2-positions-core.md").
 - Latest completed step: `step-1-project-foundations.md`.
 - Current active step: `step-2-positions-core.md` (not yet started).
-- Next planned steps: `step-3-portfolio-dashboard.md`, `step-4-model-portfolio.md`, `step-5-rebalance-comparison.md`.
+- Next planned steps: `step-3-portfolio-dashboard.md`, `step-4-model-portfolio.md`, `step-5-rebalance-comparison.md`, `step-6-market-prices.md`.
 
 Why keep plans in the repo:
 
