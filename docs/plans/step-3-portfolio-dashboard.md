@@ -76,7 +76,7 @@ interface PositionsSummaryResponse {
 
 ## Step-by-step tasks
 
-### T1 - Pure summary calculation helper
+### T1 - Pure summary calculation helper — Done
 
 Tasks:
 - `positions-summary.ts`: `calculatePositionsSummary(positions: Position[]): PositionsSummaryResponse`.
@@ -86,6 +86,13 @@ Tasks:
 
 Acceptance:
 - Pure function compiles, takes no Prisma/NestJS dependency, ready for T2's tests.
+
+**Verification completed:**
+- `calculatePositionsSummary` takes only the Prisma-generated `Position[]` shape (no `PrismaService`, no Nest decorators) — genuinely pure and unit-testable without a database, per rule 56.
+- All money math (`invested = quantity.times(averageBuyPrice)`, sums, percentages) uses `Prisma.Decimal` throughout — `.plus()`, `.times()`, `.dividedBy()`, `.comparedTo()` for sorting — never a `Number()`/`Float` roundtrip, per rule 44a. Money values format via `.toFixed(2)`.
+- Currency groups are computed independently and never summed together, matching the resolved decision. `byTicker`/`byBroker` sort descending by invested amount (largest holding first) and currencies sort alphabetically — a deterministic, undocumented-until-now presentation choice, recorded here per rule 27.
+- `npm run build` and `npm test` (24/24, unchanged — T2 owns the new tests) pass.
+- Manual sanity check against realistic multi-currency/multi-broker/mixed-status data confirmed correct output: EUR and USD kept as separate groups (not blended), AAPL/MSFT correctly split 50/50 of the USD total, a closed position excluded from `currencies` but present in `positionCounts.closed`.
 
 ---
 
