@@ -41,7 +41,7 @@ Full rules: `docs/architecture/backend-patterns.md` → Testing, `docs/architect
 |---|---|---|---|---|
 | 1 | Project Foundations & Auth | Done | built directly on `main` | `step-1-project-foundations.md` |
 | 2 | Positions Core | Done | `feat/step2-positions-core` | `step-2-positions-core.md` |
-| 3 | Portfolio Dashboard | Ready | `feat/step3-portfolio-dashboard` | `step-3-portfolio-dashboard.md` |
+| 3 | Portfolio Dashboard | Done | `feat/step3-portfolio-dashboard` | `step-3-portfolio-dashboard.md` |
 | 4 | Model Portfolio | Proposed | `feat/step4-model-portfolio` | `step-4-model-portfolio.md` |
 | 5 | Rebalance Comparison | Proposed (future) | `feat/step5-rebalance-comparison` | `step-5-rebalance-comparison.md` |
 | 6 | Market Prices & Real P&L | Proposed (future) | `feat/step6-market-prices` | `step-6-market-prices.md` |
