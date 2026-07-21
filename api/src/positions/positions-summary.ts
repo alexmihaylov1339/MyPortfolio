@@ -93,7 +93,9 @@ function buildCurrencySummary(
   const totalInvested = sumDecimals(invested.map((entry) => entry.invested));
 
   const byTicker = toSortedAllocationEntries(
-    sumInvestedByKey(invested.map((e) => ({ key: e.ticker, invested: e.invested }))),
+    sumInvestedByKey(
+      invested.map((e) => ({ key: e.ticker, invested: e.invested })),
+    ),
     totalInvested,
   ).map(({ key, invested: entryInvested, percent }) => ({
     ticker: key,
@@ -102,7 +104,9 @@ function buildCurrencySummary(
   }));
 
   const byBroker = toSortedAllocationEntries(
-    sumInvestedByKey(invested.map((e) => ({ key: e.broker, invested: e.invested }))),
+    sumInvestedByKey(
+      invested.map((e) => ({ key: e.broker, invested: e.invested })),
+    ),
     totalInvested,
   ).map(({ key, invested: entryInvested, percent }) => ({
     broker: key,

@@ -67,9 +67,9 @@ describe('validateUpdatePositionInput', () => {
   });
 
   it('requires closedAt when status is set to CLOSED in the same request', () => {
-    expect(() =>
-      validateUpdatePositionInput({ status: 'CLOSED' }),
-    ).toThrow(BadRequestException);
+    expect(() => validateUpdatePositionInput({ status: 'CLOSED' })).toThrow(
+      BadRequestException,
+    );
   });
 
   it('accepts status CLOSED when closedAt is included in the same request', () => {
@@ -105,9 +105,9 @@ describe('validateListPositionsQuery', () => {
   });
 
   it('rejects an invalid status filter', () => {
-    expect(() =>
-      validateListPositionsQuery({ status: 'BOGUS' }),
-    ).toThrow(BadRequestException);
+    expect(() => validateListPositionsQuery({ status: 'BOGUS' })).toThrow(
+      BadRequestException,
+    );
   });
 
   it('accepts a valid status filter', () => {

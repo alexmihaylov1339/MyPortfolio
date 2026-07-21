@@ -96,7 +96,7 @@ Acceptance:
 
 ---
 
-### T2 - Tests for the summary calculation
+### T2 - Tests for the summary calculation — Done
 
 Tasks:
 - This is the step's real testing investment, per the roadmap's testing philosophy — pure financial calculation with genuine edge cases.
@@ -104,6 +104,12 @@ Tasks:
 
 Acceptance:
 - `cd api && npm test` passes with the new suite covering every edge case above.
+
+**Verification completed:**
+- Added `positions-summary.spec.ts` — 6 tests, one per edge case listed above, plus an explicit percentage-sums-to-100 check on the multi-position case.
+- The Decimal-precision test (`quantity: '10.333333'`, `averageBuyPrice: '3'` → `'31.00'`) is deliberately chosen to fail loudly if a bug ever parsed quantity as an integer or lost precision through a `Number()`/float roundtrip (`'31.00'` vs. a wrongly-truncated `'30.00'`), rather than just re-asserting round-number arithmetic.
+- Test fixtures use a small `buildPosition(overrides)` helper (real Prisma-shaped `Position` objects, `Prisma.Decimal` fields) — no mocking needed since the function under test has zero external dependencies.
+- `npm run build`, `npm run lint`, `npm test` → 5 suites, **30/30** (was 24; all 6 new pass).
 
 ---
 
