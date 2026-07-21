@@ -1,0 +1,37 @@
+import { ManageService, HTTP_METHODS, getAuthHeaders } from '@shared/services';
+import { API_V1_URL } from '@/services/config';
+
+import { DASHBOARD_ENDPOINTS } from '../constants';
+
+const api = ManageService(API_V1_URL);
+
+export interface TickerAllocationEntry {
+  ticker: string;
+  invested: string;
+  percent: string;
+}
+
+export interface BrokerAllocationEntry {
+  broker: string;
+  invested: string;
+  percent: string;
+}
+
+export interface CurrencySummary {
+  currency: string;
+  totalInvested: string;
+  byTicker: TickerAllocationEntry[];
+  byBroker: BrokerAllocationEntry[];
+}
+
+export interface PositionsSummary {
+  currencies: CurrencySummary[];
+  positionCounts: { open: number; closed: number };
+}
+
+export function getPositionsSummary(): Promise<PositionsSummary> {
+  return api
+    .prepareRequest(DASHBOARD_ENDPOINTS.SUMMARY, HTTP_METHODS.GET)
+    .setHeaders(getAuthHeaders())
+    .execRequest<PositionsSummary>();
+}

@@ -129,7 +129,7 @@ Acceptance:
 
 ---
 
-### T4 - Frontend dashboard service + hook
+### T4 - Frontend dashboard service + hook — Done
 
 Tasks:
 - `web/src/features/dashboard/services/dashboard.service.ts`: `getPositionsSummary()` via `ManageService` + `getAuthHeaders()`, matching the positions service's pattern.
@@ -137,6 +137,11 @@ Tasks:
 
 Acceptance:
 - Hook compiles; usable from a page (full exercise happens once T5 lands, same deferral pattern used in Step 2).
+
+**Verification completed:**
+- Added `dashboard/{constants,services,hooks}` mirroring the `positions` feature's structure and `ManageService`/`getAuthHeaders()` pattern exactly.
+- **Deliberate cache-key decision:** `useDashboardSummaryQuery` uses `queryKey: ['positions', 'summary']`, not `['dashboard', 'summary']` — TanStack Query invalidates by key *prefix*, and the existing positions create/update/delete mutations already call `invalidateQueries({ queryKey: ['positions'] })`. Keying the summary under the `positions` namespace means the dashboard automatically refreshes after any position change, with no extra invalidation code needed anywhere. Using a separate `dashboard` namespace would have left the dashboard silently stale after edits — worth recording since it isn't obvious from the file layout (the hook lives in `features/dashboard/` but shares `features/positions/`'s cache namespace on purpose).
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged — no new tests at this stage, matching Step 2's T4 deferral pattern), `npm run build` all pass.
 
 ---
 
