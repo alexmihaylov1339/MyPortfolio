@@ -1,0 +1,18 @@
+@use '@/styles/colors.scss' as *;
+
+.field {
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+}
+
+.required {
+  color: $error-red;
+}
+
+.input {
+  padding: 8px;
+  width: 100%;
+}

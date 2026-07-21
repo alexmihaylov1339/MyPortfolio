@@ -1,0 +1,17 @@
+@use '@/styles/colors.scss' as *;
+
+.field {
+  margin-bottom: 12px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.required {
+  color: $error-red;
+}
+

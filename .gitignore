@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+.next/
+out/
+coverage/
+
+# OS / editor
+.DS_Store
+*.log

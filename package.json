@@ -1,0 +1,12 @@
+{
+  "name": "myportfolio",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run start:be\" \"npm run start:fe\"",
+    "start:fe": "npm --prefix web run dev",
+    "start:be": "npm --prefix api run start:dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

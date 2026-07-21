@@ -1,0 +1,15 @@
+export {
+  forgotPassword,
+  getCurrentUser,
+  login,
+  register,
+  resetPassword,
+  updateAccount,
+  type AuthResponse,
+  type ForgotPasswordResponse,
+  type LoginCredentials,
+  type RegisterCredentials,
+  type ResetPasswordInput,
+  type UpdateAccountInput,
+  type User,
+} from './auth.service';
