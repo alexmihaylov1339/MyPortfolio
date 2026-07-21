@@ -145,7 +145,7 @@ Acceptance:
 
 ---
 
-### T5 - Dashboard page
+### T5 - Dashboard page — Done
 
 Tasks:
 - Replace the placeholder `/dashboard` content: a card per currency (total invested, allocation by ticker, allocation by broker), an open/closed count, and a link to `/positions`.
@@ -153,6 +153,12 @@ Tasks:
 
 Acceptance:
 - `/dashboard` renders correctly for a user with positions and for a user with none.
+
+**Verification completed:**
+- Added `dashboard/components/{CurrencySummaryCard,PositionCountsSummary,DashboardEmptyState}.tsx`, each a small named state component per rule 25, composed by `web/src/app/dashboard/page.tsx` which stays orchestration-only (hook call + conditional rendering, no inline heavy JSX).
+- "Empty" is defined as zero positions ever created (`open === 0 && closed === 0`) — a user with only closed positions gets the counts + a "No open positions right now" line, not the full get-started empty state, since those are different situations.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged), `npm run build` all pass.
+- **Live-browser check** (lighter than T6's full walkthrough, since these are brand-new components never runtime-exercised before): registered a test user, confirmed the empty state (`DashboardEmptyState` with its CTA) renders correctly with zero positions; created two USD positions (AAPL/REVOLUT, MSFT/IBKR) via the API, reloaded — dashboard correctly showed `2 open · 0 closed`, one `USD` card, total `3000.00 USD`, `AAPL 50.00%` / `MSFT 50.00%` by ticker, `REVOLUT 50.00%` / `IBKR 50.00%` by broker, matching the API response exactly. Test user (and cascaded positions) deleted afterward. Multi-currency verification is T6's job.
 
 ---
 

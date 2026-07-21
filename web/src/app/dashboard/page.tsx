@@ -2,26 +2,72 @@
 
 import Link from 'next/link';
 
-import { ProtectedRoute } from '@shared/components';
-import { APP_ROUTES } from '@/shared/constants';
+import { ProtectedRoute, PageLoader, ErrorMessage } from '@shared/components';
+import { APP_ROUTES } from '@shared/constants';
+
+import { useDashboardSummaryQuery } from '@features/dashboard/hooks';
+import {
+  CurrencySummaryCard,
+  PositionCountsSummary,
+  DashboardEmptyState,
+} from '@features/dashboard/components';
 
 export default function DashboardPage() {
+  const { data: summary, isLoading, isError } = useDashboardSummaryQuery();
+  const hasNoPositions =
+    !!summary &&
+    summary.positionCounts.open === 0 &&
+    summary.positionCounts.closed === 0;
+
   return (
     <ProtectedRoute>
       <main className="p-6">
         <div className="mb-6 flex items-center justify-between gap-3">
           <h1 className="text-xl font-semibold text-ink-strong">Dashboard</h1>
-          <Link
-            href={APP_ROUTES.account}
-            className="text-sm font-medium text-brand hover:underline"
-          >
-            Account
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href={APP_ROUTES.positions}
+              className="text-sm font-medium text-brand hover:underline"
+            >
+              Positions
+            </Link>
+            <Link
+              href={APP_ROUTES.account}
+              className="text-sm font-medium text-brand hover:underline"
+            >
+              Account
+            </Link>
+          </div>
         </div>
 
-        <p className="text-ink-muted">
-          Your portfolio will appear here. Positions arrive in Step 2.
-        </p>
+        {isLoading && <PageLoader />}
+        {isError && (
+          <ErrorMessage message="Could not load your portfolio summary." />
+        )}
+
+        {summary && hasNoPositions && <DashboardEmptyState />}
+
+        {summary && !hasNoPositions && (
+          <>
+            <PositionCountsSummary
+              open={summary.positionCounts.open}
+              closed={summary.positionCounts.closed}
+            />
+
+            {summary.currencies.length === 0 ? (
+              <p className="text-ink-muted">No open positions right now.</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {summary.currencies.map((currency) => (
+                  <CurrencySummaryCard
+                    key={currency.currency}
+                    summary={currency}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </main>
     </ProtectedRoute>
   );
