@@ -202,7 +202,7 @@ Acceptance:
 
 ---
 
-### T6 - Model form with inline allocation rows
+### T6 - Model form with inline allocation rows — Done
 
 Tasks:
 - **Resolve the repeating-row-group gap before building**, don't guess: either (a) extend `FormBuilder` with a new repeatable-group field type, or (b) build a bespoke `AllocationRowsEditor` component that sits next to `FormBuilder` (`FormBuilder` handles `name`/`isDefault`, the editor handles the ticker/percent rows, both submitted together via a shared wrapping form/state) — decide at task time based on how much of `FormBuilder`'s internals (uncontrolled `defaultValue` extraction via `FormData`) would need to change for (a) to work cleanly.
@@ -211,6 +211,14 @@ Tasks:
 
 Acceptance:
 - Create and edit both route through the same form; adding/removing a row updates the running total live.
+
+**Verification completed — decision made, third option found:**
+- Full repeating-group support inside `FormBuilder` (option a) was rejected: `FormBuilder`'s `handleSubmit` reads a single flat `FormData` keyed by `field.name`, fundamentally a one-name-one-value model — teaching it to reconstruct an array of `{ticker, targetPercent}` rows from dynamically-numbered field names would be a much bigger change than any prior `FormBuilder` extension (Step 2's `DateField` only added one new leaf input type).
+- A fully bespoke component sitting *outside* `FormBuilder`'s `<form>` (option b as originally framed) was also rejected: it would lose native Enter-to-submit and HTML5 participation for the row inputs, and read oddly next to the "always use FormBuilder" rule.
+- **What was actually built:** a small, generically useful `FormBuilder` addition — an optional `children` prop rendered inside its real `<form>`, after the declared fields, before the error message/submit row. `AllocationRowsEditor` renders there as real form-native content, while its row state (`{ticker, targetPercent}[]`) lives as local `useState` in `ModelForm`, never touching `FormBuilder`'s `FormData` extraction — same "local state closed over at submit time" pattern `PositionForm` already uses for its conditional `closedAt` field, just extended to an array instead of one field. `children` is optional and additive; existing `FormBuilder` consumers (`LoginForm`, `RegisterForm`, `UpdateAccountForm`, `PositionForm`) are unaffected — confirmed by `FormBuilder.test.tsx`'s full suite still passing unchanged.
+- `AllocationRowsEditor` shows a live "Total: X% ✓ / (must equal 100%)" hint using a plain-`Number` sum, rounded to 2dp for display — explicitly a UI nicety, not the authoritative check (that stays server-side `Decimal` math per T3/T4). Documented as a deliberate simplification, matching how other display-only roundings were handled in Steps 2/3.
+- `mapFormValuesToModelInput` explicitly coerces `values.isDefault` with `Boolean(...)` — applying the lesson from Step 2's real bug directly this time: `FormBuilder`'s `CheckboxField` (like `NumberField`) returns its real runtime type (`boolean`), not the string the `Record<string, string>` type parameter implies, so this was handled correctly from the start rather than discovered later via browser testing.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged — `FormBuilder.test.tsx` confirms the `children` addition is backward-compatible), `npm run build` all pass. Full interactive exercise (rows add/remove, live total, submit) happens once T7's pages exist.
 
 ---
 

@@ -25,6 +25,7 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
   resetOnSubmit = true,
   leadingAction,
   actionsContainerClassName,
+  children,
 }: FormBuilderProps<TFormValues>) {
   const [isPending, startTransition] = useTransition();
   const [isDeletePending, startDeleteTransition] = useTransition();
@@ -106,6 +107,8 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
         };
         return <Field key={field.name} config={resolvedField} disabled={isPending} />;
       })}
+
+      {children}
 
       {errorMessage && <ErrorMessage message={errorMessage} />}
 

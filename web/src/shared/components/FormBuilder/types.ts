@@ -75,4 +75,12 @@ export interface FormBuilderProps<TFormValues = Record<string, unknown>> {
   resetOnSubmit?: boolean;
   leadingAction?: ReactNode;
   actionsContainerClassName?: string;
+  /**
+   * Extra content rendered inside the real <form>, after the declared
+   * fields and before the error message/submit row. For content that
+   * needs native form participation (Enter-to-submit) but manages its
+   * own state outside FormBuilder's FormData-based field extraction —
+   * e.g. a repeatable row editor. Not read by handleSubmit's `values`.
+   */
+  children?: ReactNode;
 }

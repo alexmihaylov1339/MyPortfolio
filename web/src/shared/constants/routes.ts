@@ -11,4 +11,7 @@ export const APP_ROUTES = {
   positions: '/positions',
   newPosition: '/positions/new',
   positionEdit: (id: string) => `/positions/${id}/edit`,
+  models: '/models',
+  newModel: '/models/new',
+  modelEdit: (id: string) => `/models/${id}/edit`,
 } as const;
