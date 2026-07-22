@@ -134,7 +134,7 @@ Acceptance:
 
 ---
 
-### T4 - Frontend service + hook
+### T4 - Frontend service + hook — Done
 
 Tasks:
 - `rebalance.service.ts` (`getRebalanceComparison()`) + `useRebalanceQuery()`, mirroring the dashboard feature's shape (read-only, single query, no mutations).
@@ -142,6 +142,11 @@ Tasks:
 
 Acceptance:
 - Hook compiles; full exercise happens once T5's page exists.
+
+**Verification completed — task's original plan revised, documented rather than silently changed:**
+- The dashboard's key-sharing trick (borrow `['positions', 'summary']` so positions mutations invalidate it) only works because the dashboard depends on exactly one other feature. Rebalance depends on **two** (positions *and* models), and there's no single array prefix that's a match-by-invalidation target for both. Wiring `invalidateQueries(['rebalance'])` into all six existing positions/models mutations was the alternative, but that means touching files well outside this feature for a page users visit deliberately, not one that needs to stay live while they're elsewhere.
+- **Resolved instead with `staleTime: 0`** on `useRebalanceQuery` — always refetches on mount. Simpler, correct for how this page is actually used, and doesn't touch any positions/models file.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged), `npm run build` all pass.
 
 ---
 
