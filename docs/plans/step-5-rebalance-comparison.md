@@ -1,6 +1,6 @@
 # MyPortfolio: Step 5 Plan - Rebalance Comparison
 
-**Status:** Ready  
+**Status:** Complete — all T1-T6 done and verified (build/lint/test in both packages, plus a full live-browser walkthrough of all four states: no model, zero positions, full comparison, excluded currencies)  
 **Date:** 2026-07-22  
 **Roadmap ref:** `docs/plans/portfolio-roadmap.md` → Step 5
 
@@ -165,7 +165,7 @@ Acceptance:
 
 ---
 
-### T6 - Verification
+### T6 - Verification — Done
 
 Tasks:
 - `npm run build`/`lint`/`test` in both packages.
@@ -173,6 +173,15 @@ Tasks:
 
 Acceptance:
 - Definition of done below is met.
+
+**Verification completed:**
+- `npm run build`/`lint`/`test` clean in both packages: api 55/55, web 217/217.
+- Full live-browser walkthrough via the real UI (login form) through all four reachable states:
+  1. **No default model** → empty state with "Create a model" link, correct.
+  2. **Default model, zero real positions** → both `AAPL`/`VOO` at `0.00%` actual, `-30.00%`/`-70.00%` difference, both `Underweight`.
+  3. **Full comparison** (created `AAPL`/`TSLA` in USD, `MSFT` in a smaller EUR position via the API) → `AAPL` `50.00%` actual vs `30.00%` target = `Overweight`; `TSLA` (not in the model) `50.00%` actual vs `0.00%` target = `Overweight`; `VOO` (not held) `0.00%` actual vs `70.00%` target = `Underweight`.
+  4. **Excluded currencies** → "This comparison only covers your largest currency. Positions in EUR are not reflected here." shown correctly, table header correctly labeled "Actual (USD)".
+- Unlike Steps 2–4's equivalent tasks, **no real bugs were found this time** — a reasonable sign that lessons from those steps (explicit runtime-type coercion for `FormBuilder` fields, live-database verification of transaction invariants, honest currency-boundary handling) were applied proactively rather than discovered here. Test data cleaned up afterward; dev servers stopped.
 
 ---
 

@@ -43,7 +43,7 @@ Full rules: `docs/architecture/backend-patterns.md` → Testing, `docs/architect
 | 2 | Positions Core | Done | `feat/step2-positions-core` | `step-2-positions-core.md` |
 | 3 | Portfolio Dashboard | Done | `feat/step3-portfolio-dashboard` | `step-3-portfolio-dashboard.md` |
 | 4 | Model Portfolio | Done | `feat/step4-model-portfolio` | `step-4-model-portfolio.md` |
-| 5 | Rebalance Comparison | Ready | `feat/step5-rebalance-comparison` | `step-5-rebalance-comparison.md` |
+| 5 | Rebalance Comparison | Done | `feat/step5-rebalance-comparison` | `step-5-rebalance-comparison.md` |
 | 6 | Market Prices & Real P&L | Proposed (future) | `feat/step6-market-prices` | `step-6-market-prices.md` |
 
 Branch convention: `feat/step<N>-<slug>` (no hyphen between `step` and the number). Step 1 was foundational scaffolding built directly on `main`; from Step 2 onward, each step gets its own branch.
