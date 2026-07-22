@@ -150,7 +150,7 @@ Acceptance:
 
 ---
 
-### T3 - Backend CRUD contract
+### T3 - Backend CRUD contract — Done
 
 Tasks:
 - Routes: `POST /models`, `GET /models`, `GET /models/:id`, `PATCH /models/:id`, `DELETE /models/:id`.
@@ -160,6 +160,12 @@ Tasks:
 
 Acceptance:
 - Full CRUD works via authenticated requests; a user cannot read/edit/delete another user's model; creating a second model with `isDefault: true` correctly unsets the first; deleting the default model leaves the user with no default (no automatic re-assignment — that's a UX nicety, not a correctness requirement, and out of scope here).
+
+**Verification completed:**
+- Added `dto/{create-model,update-model}.dto.ts`, `models-errors.ts`, `models-validation.ts` (percentage-sum-to-exactly-100 and no-tolerance duplicate-ticker checks, using `Prisma.Decimal` throughout — never `Number()` for the sum comparison itself, only for the initial positive-number shape check), `models.helpers.ts` (`toModelResponse`, explicit `Decimal`→string and `Date`→ISO mapping), and the full `models.service.ts`/`models.controller.ts` CRUD.
+- `isDefault` exclusivity and the wholesale allocation replace both run inside `prisma.$transaction` — a user's first model is forced default regardless of the request body; setting `isDefault: true` on any other model unsets the previous one in the same transaction as the write, not as a separate non-atomic step.
+- `npm run build`, `npm run lint`, `npm test` (30/30, unchanged — T4 owns the new validation tests) all pass.
+- Live end-to-end verification deferred to T8 (this step's dedicated full-walkthrough task, matching Steps 2/3's pattern) rather than repeated here.
 
 ---
 
