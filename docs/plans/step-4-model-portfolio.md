@@ -1,6 +1,6 @@
 # MyPortfolio: Step 4 Plan - Model Portfolio
 
-**Status:** Ready  
+**Status:** Complete — all T1-T8 done and verified (build/lint/test in both packages, plus a full live-browser walkthrough including the isDefault exclusivity invariant and wholesale allocation replace)  
 **Date:** 2026-07-22  
 **Roadmap ref:** `docs/plans/portfolio-roadmap.md` → Step 4
 
@@ -240,7 +240,7 @@ Acceptance:
 
 ---
 
-### T8 - Verification
+### T8 - Verification — Done
 
 Tasks:
 - `npm run build`/`lint`/`test` in both packages.
@@ -248,6 +248,16 @@ Tasks:
 
 Acceptance:
 - Definition of done below is met.
+
+**Verification completed:**
+- `npm run build`/`lint`/`test` clean in both packages: api 47/47, web 217/217.
+- Full live-browser walkthrough via the real UI (login form, `/models/new`, `/models/[id]/edit`, `requestSubmit()` for submission — `computer.left_click` intermittently failed to register on a couple of buttons in this browser tab again, same environment quirk seen in Steps 2/3, confirmed via a direct `element.click()` that the underlying app logic was never the problem):
+  - Created "Growth" (3 rows, `AAPL 33.33% / MSFT 33.33% / VOO 33.34%`, summing to exactly 100%) — correctly auto-defaulted as the first model even though "Set as default" wasn't checked.
+  - **The `isDefault` exclusivity invariant deferred from T4 — verified here against the real database:** created "Conservative" with "Set as default" explicitly checked; "Growth"'s `Default` badge correctly disappeared the moment "Conservative" was created. The transaction logic holds in practice, not just in the code reading correct.
+  - Edited "Growth": removed one row, replaced the other two entirely (`AAPL/MSFT` → `TSLA/GOOG`) — confirmed wholesale replace, not merge: the list view showed only `TSLA 50% · GOOG 50%`, no trace of the old rows.
+  - Deleted "Growth" via the API (`DELETE`, matching prior steps' practice of not clicking through `window.confirm()` in the browser-automation session) → `204`, subsequent `GET` → `404`, list correctly showed only "Conservative" remaining, confirmed visually in the browser too.
+  - The live "Total: X% ✓/(must equal 100%)" hint (`AllocationRowsEditor`) updated correctly at every step: red while incomplete, green exactly at 100%.
+  - Test user (and cascaded models/allocations, via `onDelete: Cascade`) deleted afterward; ad-hoc dev servers stopped.
 
 ---
 
