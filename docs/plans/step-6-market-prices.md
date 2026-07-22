@@ -179,7 +179,7 @@ Acceptance:
 
 ---
 
-### T6 - Dashboard P&L section
+### T6 - Dashboard P&L section — Done
 
 Tasks:
 - Extend `/dashboard` with a P&L section per currency, rendered **alongside** the existing cost-basis `CurrencySummaryCard`s, not replacing them: current value, unrealized P&L (currency + %), and a clear "price unavailable" indicator per position where applicable.
@@ -187,6 +187,12 @@ Tasks:
 
 Acceptance:
 - Dashboard shows both cost-basis and live P&L sections correctly; a P&L failure degrades gracefully without breaking the rest of the page.
+
+**Verification completed:**
+- `CurrencyPnlCard` added alongside `CurrencySummaryCard`; a "LIVE P&L" section renders below the existing cost-basis cards on `/dashboard`, with its own independent `isPnlLoading`/`isPnlError` handling (separate `usePortfolioPnlQuery()` call, not derived from the summary query).
+- Live-verified in the browser end-to-end: created two real positions (`AAPL` +10@100, `TSLA` +5@300) via the running app, confirmed the dashboard renders cost-basis unchanged (`2500.00 USD`, correct ticker/broker breakdown) and the new P&L section correctly shows "Price unavailable" for both positions with `0.00 USD` totals (no `TWELVE_DATA_API_KEY` in this environment — this is the expected graceful-degradation path, not a bug).
+- **Graceful-degradation acceptance criterion specifically verified**: used TanStack Query Devtools' "Trigger Error" action to force the `['positions','pnl']` query into an error state while leaving `['positions','summary']` untouched. Confirmed the P&L section correctly showed "Could not load live P&L. Cost-basis figures above are still accurate." while the cost-basis card above it kept rendering normally and unaffected — proves the two sections are genuinely decoupled, not just structurally separated in the JSX.
+- Test positions deleted after verification. `npx tsc --noEmit` and `npm run lint` (web) both pass.
 
 ---
 
