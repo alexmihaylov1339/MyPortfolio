@@ -222,7 +222,7 @@ Acceptance:
 
 ---
 
-### T7 - Models list + page
+### T7 - Models list + page — Done
 
 Tasks:
 - `/models` page (`ProtectedRoute`): list of the user's models (name, default badge, ticker count), "Add model" action, edit/delete per row.
@@ -231,6 +231,12 @@ Tasks:
 
 Acceptance:
 - A logged-in user can view, add, edit, and delete model portfolios end-to-end in the browser.
+
+**Verification completed:**
+- Added `models/list/components/ModelsList.tsx` — each model shown as a card (name, `Default` badge when `isDefault`, an inline `TICKER 60% · TICKER 40%` allocation summary, Edit/Delete actions), simpler than `PositionsTable` (no column sort) since T7's scope didn't call for it and models are typically few in number.
+- Added the three pages: `web/src/app/models/page.tsx`, `models/new/page.tsx`, `models/[id]/edit/page.tsx`, mirroring the positions pages' structure exactly (loading/error/success states, `ProtectedRoute`, `toModelFormValues` prepping `initialValues` for the edit page).
+- Deliberately did not add "Models" navigation links to the dashboard/positions pages — out of T7's scope (view/add/edit/delete models end-to-end), and broader nav is explicitly deferred territory (`AppShell`/`Navigation`, not built in this repo yet).
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged), `npm run build` all pass — all three routes registered (`/models` static, `/models/new` static, `/models/[id]/edit` dynamic, matching positions' pattern exactly).
 
 ---
 
