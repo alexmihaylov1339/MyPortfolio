@@ -6,7 +6,7 @@ interface CurrencySummaryCardProps {
 
 export default function CurrencySummaryCard({ summary }: CurrencySummaryCardProps) {
   return (
-    <div className="rounded-[8px] border border-line-soft p-4">
+    <div className="rounded-[var(--radius-card)] border border-line-soft p-4 shadow-card">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-ink-strong">{summary.currency}</h2>
         <span className="text-lg font-semibold text-ink-strong">

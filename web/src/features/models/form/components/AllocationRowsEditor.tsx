@@ -68,7 +68,7 @@ export default function AllocationRowsEditor({
               onChange={(event) =>
                 handleRowChange(index, 'ticker', event.target.value)
               }
-              className="w-1/2 rounded-[4px] border border-line px-2 py-1 text-sm"
+              className="w-1/2 rounded-[var(--radius-control)] border border-line px-2 py-1 text-sm"
             />
             <input
               type="number"
@@ -79,7 +79,7 @@ export default function AllocationRowsEditor({
               }
               min={0}
               step="0.01"
-              className="w-1/3 rounded-[4px] border border-line px-2 py-1 text-sm"
+              className="w-1/3 rounded-[var(--radius-control)] border border-line px-2 py-1 text-sm"
             />
             <button
               type="button"

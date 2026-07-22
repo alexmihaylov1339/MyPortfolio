@@ -15,4 +15,7 @@ export type { NotificationProps, NotificationType, NotificationData } from './No
 
 export { AuthProvider, ProtectedRoute, GuestOnlyRoute, useAuth } from './AuthProvider';
 
+export { ThemeProvider, useTheme } from './ThemeProvider';
+
 export { default as AppNav } from './AppNav/AppNav';
+export { default as ThemeSwitcher } from './ThemeSwitcher/ThemeSwitcher';

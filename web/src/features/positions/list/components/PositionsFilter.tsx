@@ -21,9 +21,9 @@ export default function PositionsFilter({ value, onChange }: PositionsFilterProp
           key={option.label}
           type="button"
           onClick={() => onChange(option.value)}
-          className={`cursor-pointer rounded-[4px] px-3 py-1 text-sm ${
+          className={`cursor-pointer rounded-[var(--radius-control)] px-3 py-1 text-sm ${
             value === option.value
-              ? 'bg-brand-accent text-white'
+              ? 'bg-brand-accent text-brand-accent-ink'
               : 'bg-surface-soft text-ink-strong'
           }`}
         >

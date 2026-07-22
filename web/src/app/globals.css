@@ -1,50 +1,65 @@
 @config "../../tailwind.config.js";
 @import "tailwindcss";
 
+/*
+ * Theme system: three product themes (Ledger / Terminal / Studio),
+ * switched at runtime via [data-theme] on <html> (see
+ * shared/components/ThemeProvider.tsx). Every --color-* token below is
+ * already what tailwind.config.js's utility classes (bg-brand-accent,
+ * text-ink-strong, border-line-soft, etc.) resolve to, so overriding a
+ * token here reskins every component that uses it — no component
+ * changes needed for color or type.
+ *
+ * The bare :root block below IS the "studio" theme (also DEFAULT_THEME
+ * in shared/constants/theme.ts) so there's no flash on first paint
+ * before JS picks a theme. "ledger" and "terminal" are explicit
+ * [data-theme] overrides below it.
+ */
 :root {
   --color-white: #ffffff;
   --color-black: #000000;
 
-  --color-brand: #1d6fa5;
-  --color-brand-deep: #1a5f8e;
-  --color-brand-hover: #165984;
-  --color-brand-accent: #378add;
-  --color-brand-accent-hover: #2e78c0;
-  --color-brand-contrast: #e6f1fb;
-  --color-brand-ink: #0d2b45;
-  --color-brand-soft: #e8f0f9;
+  --color-brand: #6d3b5c;
+  --color-brand-deep: #5a3049;
+  --color-brand-hover: #4e2a40;
+  --color-brand-accent: #6d3b5c;
+  --color-brand-accent-hover: #5a3049;
+  --color-brand-accent-ink: #ffffff;
+  --color-brand-contrast: #f3e9f0;
+  --color-brand-ink: #3a2030;
+  --color-brand-soft: #f3e9f0;
 
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fafc;
-  --color-surface-muted: #f6f8fc;
-  --color-surface-nav: rgba(13, 43, 69, 0.02);
+  --color-surface-soft: #f7f8fa;
+  --color-surface-muted: #f1f2f5;
+  --color-surface-nav: #ffffff;
 
-  --color-line-nav: rgba(1, 1, 1, 0.08);
-  --color-line-soft: rgba(1, 1, 1, 0.1);
-  --color-line: rgba(1, 1, 1, 0.15);
-  --color-line-strong: rgba(1, 1, 1, 0.2);
-  --color-line-muted: #e5e7eb;
-  --color-line-brand: rgba(72, 148, 224, 0.5);
-  --color-line-brand-soft: #b5d4f4;
-  --color-line-brand-muted: #d5e4f1;
+  --color-line-nav: rgba(32, 35, 43, 0.08);
+  --color-line-soft: rgba(32, 35, 43, 0.07);
+  --color-line: rgba(32, 35, 43, 0.12);
+  --color-line-strong: rgba(32, 35, 43, 0.2);
+  --color-line-muted: #e7e8ec;
+  --color-line-brand: rgba(109, 59, 92, 0.4);
+  --color-line-brand-soft: #e3cddb;
+  --color-line-brand-muted: #ecdde5;
 
-  --color-ink-heading: rgba(1, 1, 1, 0.75);
-  --color-ink-strong: rgba(1, 1, 1, 0.72);
-  --color-ink-muted: rgba(1, 1, 1, 0.55);
-  --color-ink-subtle: rgba(1, 1, 1, 0.5);
-  --color-ink-faint: rgba(1, 1, 1, 0.4);
-  --color-ink-disabled: rgba(1, 1, 1, 0.2);
+  --color-ink-heading: rgba(32, 35, 43, 0.88);
+  --color-ink-strong: rgba(32, 35, 43, 0.8);
+  --color-ink-muted: rgba(32, 35, 43, 0.6);
+  --color-ink-subtle: rgba(32, 35, 43, 0.5);
+  --color-ink-faint: rgba(32, 35, 43, 0.4);
+  --color-ink-disabled: rgba(32, 35, 43, 0.22);
 
-  --color-destructive: #dc2626;
-  --color-destructive-strong: #b91c1c;
-  --color-destructive-soft: #fff5f5;
-  --color-destructive-line: #efb5b5;
-  --color-destructive-text: #c53d3d;
-  --color-success: #16a34a;
-  --color-success-soft: #f2fbf5;
-  --color-success-line: #b4ddbf;
-  --color-success-text: #237b3f;
-  --color-info-text: #5b6b78;
+  --color-destructive: #c94545;
+  --color-destructive-strong: #a83a3a;
+  --color-destructive-soft: #fbecec;
+  --color-destructive-line: #eec2c2;
+  --color-destructive-text: #c94545;
+  --color-success: #1f8a5f;
+  --color-success-soft: #e9f7f0;
+  --color-success-line: #b9e4cf;
+  --color-success-text: #1f8a5f;
+  --color-info-text: #6d7280;
 
   --color-slate-50: #f8fafc;
   --color-slate-100: #f1f5f9;
@@ -69,8 +84,8 @@
   --color-sky-200: #bae6fd;
   --color-sky-700: #0369a1;
 
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f8fa;
+  --foreground: #20232b;
 
   /* Auth forms & links */
   --bg: #f8fafc;
@@ -85,9 +100,123 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-elevation-sm: 0 1px 4px rgba(0, 0, 0, 0.15);
   --shadow-elevation-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Theme-varying layout + type tokens */
+  --radius-control: 10px;
+  --radius-card: 12px;
+  --shadow-card: 0 1px 2px rgba(20, 24, 32, 0.04), 0 8px 20px -12px rgba(20, 24, 32, 0.18);
+  --font-display: var(--font-manrope), system-ui, sans-serif;
+  --font-body: var(--font-public-sans), system-ui, sans-serif;
+}
+
+/* ---------- Ledger: register/ledger-book, serif numerals on paper ---------- */
+:root[data-theme="ledger"] {
+  --color-brand: #a8791f;
+  --color-brand-deep: #8a6119;
+  --color-brand-hover: #7a5714;
+  --color-brand-accent: #a8791f;
+  --color-brand-accent-hover: #8a6119;
+  --color-brand-accent-ink: #ffffff;
+  --color-brand-contrast: #f3ead6;
+  --color-brand-ink: #3a2c10;
+  --color-brand-soft: #f3ead6;
+
+  --color-surface: #f6f7f2;
+  --color-surface-soft: #eef0ea;
+  --color-surface-muted: #e7e9e0;
+  --color-surface-nav: #e7e9e0;
+
+  --color-line-nav: rgba(28, 33, 29, 0.14);
+  --color-line-soft: rgba(28, 33, 29, 0.1);
+  --color-line: rgba(28, 33, 29, 0.16);
+  --color-line-strong: rgba(28, 33, 29, 0.24);
+  --color-line-muted: #dfe2d8;
+  --color-line-brand: rgba(168, 121, 31, 0.45);
+  --color-line-brand-soft: #e6d5ab;
+  --color-line-brand-muted: #ece0c4;
+
+  --color-ink-heading: rgba(28, 33, 29, 0.88);
+  --color-ink-strong: rgba(28, 33, 29, 0.78);
+  --color-ink-muted: rgba(28, 33, 29, 0.58);
+  --color-ink-subtle: rgba(28, 33, 29, 0.5);
+  --color-ink-faint: rgba(28, 33, 29, 0.4);
+  --color-ink-disabled: rgba(28, 33, 29, 0.22);
+
+  --color-destructive: #8a3232;
+  --color-destructive-strong: #6e2727;
+  --color-destructive-soft: #f4e6e2;
+  --color-destructive-line: #d9b3ac;
+  --color-destructive-text: #8a3232;
+  --color-success: #2f6b3f;
+  --color-success-soft: #e3ecdf;
+  --color-success-line: #b9d0b2;
+  --color-success-text: #2f6b3f;
+  --color-info-text: #5b6358;
+
+  --background: #eef0ea;
+  --foreground: #1c211d;
+
+  --radius-control: 2px;
+  --radius-card: 2px;
+  --shadow-card: none;
+  --font-display: var(--font-source-serif), Georgia, serif;
+  --font-body: var(--font-plex-sans), system-ui, sans-serif;
+}
+
+/* ---------- Terminal: dark, monospace, quote-screen density ---------- */
+:root[data-theme="terminal"] {
+  --color-brand: #e8a33d;
+  --color-brand-deep: #c98a2f;
+  --color-brand-hover: #b87c29;
+  --color-brand-accent: #e8a33d;
+  --color-brand-accent-hover: #c98a2f;
+  --color-brand-accent-ink: #12181c;
+  --color-brand-contrast: rgba(232, 163, 61, 0.14);
+  --color-brand-ink: #e8a33d;
+  --color-brand-soft: rgba(232, 163, 61, 0.14);
+
+  --color-surface: #12181c;
+  --color-surface-soft: #0b0f12;
+  --color-surface-muted: #171d21;
+  --color-surface-nav: #0e1316;
+
+  --color-line-nav: rgba(215, 222, 224, 0.14);
+  --color-line-soft: rgba(215, 222, 224, 0.1);
+  --color-line: rgba(215, 222, 224, 0.16);
+  --color-line-strong: rgba(215, 222, 224, 0.26);
+  --color-line-muted: rgba(215, 222, 224, 0.16);
+  --color-line-brand: rgba(232, 163, 61, 0.4);
+  --color-line-brand-soft: rgba(232, 163, 61, 0.25);
+  --color-line-brand-muted: rgba(232, 163, 61, 0.15);
+
+  --color-ink-heading: #e4eaec;
+  --color-ink-strong: #d7dee0;
+  --color-ink-muted: #97a3a8;
+  --color-ink-subtle: #7c8a90;
+  --color-ink-faint: #647177;
+  --color-ink-disabled: #4a565b;
+
+  --color-destructive: #e0605a;
+  --color-destructive-strong: #c94a45;
+  --color-destructive-soft: rgba(224, 96, 90, 0.12);
+  --color-destructive-line: rgba(224, 96, 90, 0.35);
+  --color-destructive-text: #e0605a;
+  --color-success: #4fb477;
+  --color-success-soft: rgba(79, 180, 119, 0.12);
+  --color-success-line: rgba(79, 180, 119, 0.35);
+  --color-success-text: #4fb477;
+  --color-info-text: #7c8a90;
+
+  --background: #0b0f12;
+  --foreground: #d7dee0;
+
+  --radius-control: 0px;
+  --radius-card: 0px;
+  --shadow-card: none;
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body: var(--font-jetbrains-mono), 'Courier New', monospace;
 }
 
 @theme inline {
@@ -97,17 +226,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
 }
 
 button:not(:disabled),

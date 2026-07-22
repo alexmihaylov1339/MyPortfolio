@@ -33,14 +33,14 @@ export default function ForgotPasswordForm() {
     >
       {error && (
         <p
-          className="mb-4 rounded-[8px] border border-destructive-line bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive-text"
+          className="mb-4 rounded-[var(--radius-card)] border border-destructive-line bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive-text"
           role="alert"
         >
           {error}
         </p>
       )}
       {success && (
-        <div className="mb-4 rounded-[8px] border border-success-line bg-success-soft px-4 py-3">
+        <div className="mb-4 rounded-[var(--radius-card)] border border-success-line bg-success-soft px-4 py-3">
           <p className="text-sm font-medium text-success-text">{success.message}</p>
           {success.resetToken && (
             <p className="mt-2 break-all text-xs text-info">
@@ -61,7 +61,7 @@ export default function ForgotPasswordForm() {
           onSubmit={handleSubmit}
           formClassName="flex flex-col"
           submitLabel={mutation.isPending ? 'SENDING...' : 'Send Reset link'}
-          submitButtonClassName="mt-[2px] h-[47px] w-full rounded-[5px] bg-brand-accent px-4 text-center text-[20px] font-bold tracking-[0.01em] text-white shadow-[0_1px_4px_rgba(0,0,0,0.15)] transition hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          submitButtonClassName="mt-[2px] h-[47px] w-full rounded-[var(--radius-control)] bg-brand-accent px-4 text-center text-[20px] font-bold tracking-[0.01em] text-brand-accent-ink shadow-[0_1px_4px_rgba(0,0,0,0.15)] transition hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
         />
       )}
       <p className="mt-[31px] text-center text-[18px] font-bold tracking-[0.01em] text-brand">

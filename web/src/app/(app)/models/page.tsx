@@ -20,7 +20,7 @@ export default function ModelsPage() {
         </h1>
         <Link
           href={APP_ROUTES.newModel}
-          className="rounded-[4px] bg-brand-accent px-[18px] py-[10px] text-sm font-semibold text-white transition hover:opacity-90"
+          className="rounded-[var(--radius-control)] bg-brand-accent px-[18px] py-[10px] text-sm font-semibold text-brand-accent-ink transition hover:opacity-90"
         >
           Add model
         </Link>

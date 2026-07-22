@@ -10,6 +10,7 @@ module.exports = {
           hover: 'var(--color-brand-hover)',
           accent: 'var(--color-brand-accent)',
           'accent-hover': 'var(--color-brand-accent-hover)',
+          'accent-ink': 'var(--color-brand-accent-ink)',
           contrast: 'var(--color-brand-contrast)',
           ink: 'var(--color-brand-ink)',
           soft: 'var(--color-brand-soft)',

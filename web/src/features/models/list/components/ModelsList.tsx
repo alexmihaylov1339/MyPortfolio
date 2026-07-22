@@ -26,7 +26,7 @@ export default function ModelsList({
       {models.map((model) => (
         <div
           key={model.id}
-          className="rounded-[8px] border border-line-soft p-4"
+          className="rounded-[var(--radius-card)] border border-line-soft p-4 shadow-card"
         >
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">

@@ -24,7 +24,7 @@ export default function PositionsPage() {
         <h1 className="text-xl font-semibold text-ink-strong">Positions</h1>
         <Link
           href={APP_ROUTES.newPosition}
-          className="rounded-[4px] bg-brand-accent px-[18px] py-[10px] text-sm font-semibold text-white transition hover:opacity-90"
+          className="rounded-[var(--radius-control)] bg-brand-accent px-[18px] py-[10px] text-sm font-semibold text-brand-accent-ink transition hover:opacity-90"
         >
           Add position
         </Link>
