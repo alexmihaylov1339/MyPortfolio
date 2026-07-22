@@ -100,7 +100,7 @@ interface PortfolioPnlResponse {
 
 ## Step-by-step tasks
 
-### T1 - Pure P&L calculation helper
+### T1 - Pure P&L calculation helper — Done
 
 Tasks:
 - `portfolio-pnl.ts`: `calculatePortfolioPnl(positions: Position[], prices: Map<string, Prisma.Decimal | null>): PortfolioPnlResponse`.
@@ -110,6 +110,10 @@ Tasks:
 
 Acceptance:
 - Pure function compiles, no Prisma/Nest/HTTP dependency, ready for T2.
+
+**Verification completed:**
+- `calculatePortfolioPnl` takes only `Position[]` and a `Map<string, Prisma.Decimal | null>` — no Prisma service, no HTTP, no Nest dependency, genuinely pure.
+- `npm run build` passes. Manual sanity check confirmed: a gain (`AAPL`, +50%), a loss (`TSLA`, -33.33%), an unpriced position (`MSFT`, all fields `null`, correctly excluded from `totalCurrentValue`/`totalUnrealizedPnl`), and a closed position (`GOOG`, excluded entirely — not even present in the response).
 
 ---
 
