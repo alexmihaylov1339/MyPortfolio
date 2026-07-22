@@ -8,8 +8,8 @@ This folder holds **implementation plans** for MyPortfolio (decisions, scope, fi
 - `portfolio-roadmap.md` is the source of truth for product intent, page structure, terminology, and testing philosophy — read it before starting any step.
 - To execute a step task, use the `.claude/commands/step-task-executor.md` slash command (e.g. "do T3 from step-2-positions-core.md").
 - Latest completed step: `step-3-portfolio-dashboard.md`.
-- Current active step: none — pick the next step from the roadmap.
-- Next planned steps: `step-4-model-portfolio.md`, `step-5-rebalance-comparison.md`, `step-6-market-prices.md`.
+- Current active step: `step-4-model-portfolio.md` (in progress).
+- Next planned steps: `step-5-rebalance-comparison.md`, `step-6-market-prices.md`.
 
 Why keep plans in the repo:
 
