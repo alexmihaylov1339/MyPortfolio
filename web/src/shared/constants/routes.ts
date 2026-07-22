@@ -14,4 +14,5 @@ export const APP_ROUTES = {
   models: '/models',
   newModel: '/models/new',
   modelEdit: (id: string) => `/models/${id}/edit`,
+  rebalance: '/rebalance',
 } as const;

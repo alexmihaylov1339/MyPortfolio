@@ -150,13 +150,18 @@ Acceptance:
 
 ---
 
-### T5 - Rebalance page
+### T5 - Rebalance page — Done
 
 Tasks:
 - `/rebalance` page (`ProtectedRoute`): a diff table/list (ticker, actual %, target %, difference, over/under/on-target), an explicit empty state ("no default model yet, create one") linking to `/models/new`, and a note when `excludedCurrencies` is non-empty explaining why those holdings aren't reflected.
 
 Acceptance:
 - Renders correctly for: no default model, a default model with zero real positions, a default model with a full real/target comparison, and (if reachable in test data) excluded currencies.
+
+**Verification completed:**
+- Added `rebalance/components/{RebalanceTable,RebalanceEmptyState,ExcludedCurrenciesNote}.tsx` and `web/src/app/rebalance/page.tsx`, mirroring the dashboard/positions pages' orchestration-only page pattern (hook call + conditional named-state components, no inline heavy JSX).
+- `RebalanceTable` color-codes status (destructive/brand/success for over/under/on-target) and shows the comparison currency in its "Actual" column header so it's never ambiguous which currency the numbers are in.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged), `npm run build` all pass — `/rebalance` registered as a static route. Full interactive exercise of all four states (no model, zero positions, full comparison, excluded currencies) happens in T6.
 
 ---
 
