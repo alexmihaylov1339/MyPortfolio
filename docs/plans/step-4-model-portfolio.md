@@ -134,7 +134,7 @@ Acceptance:
 
 ---
 
-### T2 - Backend models module scaffolding
+### T2 - Backend models module scaffolding — Done
 
 Tasks:
 - `ModelsModule`, registered in `app.module.ts`, imports `AuthModule` for the guard (mirrors `PositionsModule`).
@@ -142,6 +142,11 @@ Tasks:
 
 Acceptance:
 - App builds and boots with the module wired; unauthenticated requests to `/models` return `401`.
+
+**Verification completed:**
+- Added `api/src/models/{models.service,models.controller,models.module}.ts`, mirroring `PositionsModule`'s T2 shape exactly: `ModelsService.findAllForUser(userId)` (scoped `where`, plus `include: { allocations: true }` since a model is meaningless without its rows — T3 will build on this, not replace it), `ModelsController` with `@UseGuards(AuthGuard)` at the class level and one `GET /models` route. Registered in `app.module.ts`.
+- `npm run build` and `npm test` (30/30, unchanged) pass.
+- Booted the built app: `Mapped {/v1/models, GET} route` logged; unauthenticated `GET /v1/models` → `401`; health endpoint still `db: connected`.
 
 ---
 
