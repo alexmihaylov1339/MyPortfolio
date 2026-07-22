@@ -101,13 +101,18 @@ Acceptance:
 
 ---
 
-### T2 - Tests for the diff calculation
+### T2 - Tests for the diff calculation — Done
 
 Tasks:
 - The real testing investment for this step, per the original plan's testing note: model-only ticker, positions-only ticker, ticker in both (over/under/on-target), zero real positions, empty model (edge case — should this even be reachable given Step 4 requires ≥1 allocation? confirm and either test or document why not).
 
 Acceptance:
 - `cd api && npm test` passes with the new suite covering every edge case above.
+
+**Verification completed:**
+- Added `rebalance-diff.spec.ts` — 8 tests: overweight, underweight, exactly-on-target, model-only ticker (fully underweight), positions-only ticker (fully overweight), zero-real-positions (`null` currency, every model ticker underweight), alphabetical sort regardless of input order, and empty-model defensive coverage.
+- The empty-model case is documented in its own test name as **not reachable through the real API** (Step 4 requires ≥1 allocation) — included anyway because the pure function itself has no such guarantee and should degrade sensibly if ever called that way, not because it's an expected production path.
+- `npm run build`, `npm run lint`, `npm test` → 7 suites, **55/55** (was 47; all 8 new pass).
 
 ---
 
