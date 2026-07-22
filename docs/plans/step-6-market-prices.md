@@ -117,13 +117,16 @@ Acceptance:
 
 ---
 
-### T2 - Tests for the P&L calculation
+### T2 - Tests for the P&L calculation — Done
 
 Tasks:
 - The real testing investment for this step, per the roadmap's philosophy: gain (current > average buy), loss (current < average buy), break-even, price unavailable (excluded from totals, not zeroed), multiple currencies (never blended), closed positions excluded entirely, zero open positions.
 
 Acceptance:
 - `cd api && npm test` passes with the new suite covering every edge case above.
+
+**Verification completed:**
+- `portfolio-pnl.spec.ts` — 7 tests: zero open positions, gain (+50%), loss (-33.33%), break-even (0%), price-unavailable (excluded from totals, fields all `null`), multi-currency grouping (USD/EUR totals never blended), closed positions excluded entirely from the response. `npm test -- portfolio-pnl` — all 7 passed.
 
 ---
 
