@@ -31,6 +31,7 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
   resetOnSubmit = true,
   leadingAction,
   actionsContainerClassName,
+  leadingChildren,
   children,
 }: FormBuilderProps<TFormValues>) {
   const [isPending, startTransition] = useTransition();
@@ -95,6 +96,8 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
 
   return (
     <form onSubmit={handleSubmit} className={formClassName}>
+      {leadingChildren}
+
       {fields.map((field) => {
         const initialValue = initialValues?.[field.name];
         const resolvedField = {

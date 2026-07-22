@@ -4,6 +4,7 @@ export interface PositionResponse {
   id: string;
   broker: string;
   ticker: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType: string;
   quantity: string;
@@ -21,6 +22,7 @@ export function toPositionResponse(position: Position): PositionResponse {
     id: position.id,
     broker: position.broker,
     ticker: position.ticker,
+    exchangeMicCode: position.exchangeMicCode ?? undefined,
     name: position.name ?? undefined,
     assetType: position.assetType,
     quantity: position.quantity.toString(),

@@ -11,6 +11,7 @@ import { POSITION_ERROR_MESSAGES } from './positions-errors';
 export interface ValidatedPositionInput {
   broker: Broker;
   ticker: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType: AssetType;
   quantity: string;
@@ -24,6 +25,7 @@ export interface ValidatedPositionInput {
 export interface ValidatedPositionUpdateInput {
   broker?: Broker;
   ticker?: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType?: AssetType;
   quantity?: string;
@@ -120,6 +122,7 @@ export function validateCreatePositionInput(
   return {
     broker: body.broker,
     ticker: body.ticker.trim().toUpperCase(),
+    exchangeMicCode: body.exchangeMicCode?.trim() || undefined,
     name: body.name?.trim() || undefined,
     assetType: body.assetType ?? AssetType.STOCK,
     quantity: body.quantity.trim(),
@@ -154,6 +157,10 @@ export function validateUpdatePositionInput(
       throw new BadRequestException(POSITION_ERROR_MESSAGES.tickerRequired);
     }
     result.ticker = body.ticker.trim().toUpperCase();
+  }
+
+  if (!isUndefined(body.exchangeMicCode)) {
+    result.exchangeMicCode = body.exchangeMicCode?.trim() || undefined;
   }
 
   if (!isUndefined(body.name)) {

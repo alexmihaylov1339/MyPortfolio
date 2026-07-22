@@ -1,6 +1,7 @@
 export interface UpdatePositionDto {
   broker?: string;
   ticker?: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType?: string;
   quantity?: string;

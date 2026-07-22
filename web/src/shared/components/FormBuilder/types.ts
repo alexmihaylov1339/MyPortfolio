@@ -76,6 +76,14 @@ export interface FormBuilderProps<TFormValues = Record<string, unknown>> {
   leadingAction?: ReactNode;
   actionsContainerClassName?: string;
   /**
+   * Extra content rendered inside the real <form>, before the declared
+   * fields — for content that needs to appear first in reading order
+   * (e.g. a ticker lookup ahead of the rest of a position's fields) but
+   * still manages its own state outside FormBuilder's FormData-based
+   * field extraction. Not read by handleSubmit's `values`.
+   */
+  leadingChildren?: ReactNode;
+  /**
    * Extra content rendered inside the real <form>, after the declared
    * fields and before the error message/submit row. For content that
    * needs native form participation (Enter-to-submit) but manages its

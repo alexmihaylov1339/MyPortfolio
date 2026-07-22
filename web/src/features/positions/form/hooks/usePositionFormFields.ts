@@ -25,13 +25,6 @@ export function usePositionFormFields(status: PositionStatus): FieldConfig[] {
     },
     {
       type: 'text',
-      name: 'ticker',
-      label: 'Ticker',
-      required: true,
-      placeholder: 'AAPL',
-    },
-    {
-      type: 'text',
       name: 'name',
       label: 'Company name',
     },

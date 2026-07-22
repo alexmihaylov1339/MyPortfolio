@@ -5,6 +5,7 @@ export function toPositionFormValues(position: Position): Record<string, string>
   return {
     broker: position.broker,
     ticker: position.ticker,
+    exchangeMicCode: position.exchangeMicCode ?? '',
     name: position.name ?? '',
     assetType: position.assetType,
     quantity: position.quantity,

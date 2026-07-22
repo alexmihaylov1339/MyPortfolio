@@ -33,6 +33,7 @@ describe('mapFormValuesToPositionInput', () => {
       status: '',
       openedAt: '',
       closedAt: '',
+      exchangeMicCode: '',
     };
 
     const result = mapFormValuesToPositionInput(values);
@@ -42,5 +43,25 @@ describe('mapFormValuesToPositionInput', () => {
     expect(result.status).toBeUndefined();
     expect(result.openedAt).toBeUndefined();
     expect(result.closedAt).toBeUndefined();
+    expect(result.exchangeMicCode).toBeUndefined();
+  });
+
+  it('passes through a selected exchangeMicCode', () => {
+    // Set when the user picks a match from the ticker search results,
+    // rather than typing free text — disambiguates tickers that collide
+    // across companies/exchanges (e.g. "DSN" means different companies
+    // in Germany, Indonesia, and the US) so the right instrument gets
+    // priced instead of a bare, ambiguous symbol lookup.
+    const values = {
+      broker: 'REVOLUT',
+      ticker: 'DSN',
+      quantity: '1',
+      averageBuyPrice: '10',
+      exchangeMicCode: 'XETR',
+    };
+
+    const result = mapFormValuesToPositionInput(values);
+
+    expect(result.exchangeMicCode).toBe('XETR');
   });
 });

@@ -6,6 +6,7 @@ export function mapFormValuesToPositionInput(
   return {
     broker: values.broker as Broker,
     ticker: values.ticker,
+    exchangeMicCode: values.exchangeMicCode || undefined,
     name: values.name || undefined,
     assetType: (values.assetType as AssetType) || undefined,
     // FormBuilder's NumberField returns a JS number at runtime (despite the

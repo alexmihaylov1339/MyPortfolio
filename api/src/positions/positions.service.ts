@@ -51,6 +51,7 @@ export class PositionsService {
         userId,
         broker: input.broker,
         ticker: input.ticker,
+        exchangeMicCode: input.exchangeMicCode,
         name: input.name,
         assetType: input.assetType,
         quantity: input.quantity,

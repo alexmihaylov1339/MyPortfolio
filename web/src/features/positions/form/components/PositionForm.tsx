@@ -10,6 +10,7 @@ import { APP_ROUTES } from '@shared/constants';
 import { useCreatePositionMutation, useUpdatePositionMutation } from '../hooks';
 import { usePositionFormFields } from '../hooks/usePositionFormFields';
 import { mapFormValuesToPositionInput } from '../mapFormValuesToPositionInput';
+import TickerAutocomplete from './TickerAutocomplete';
 import type { PositionStatus } from '../../services';
 
 interface PositionFormProps {
@@ -28,6 +29,10 @@ export default function PositionForm({
   const [status, setStatus] = useState<PositionStatus>(
     (initialValues?.status as PositionStatus | undefined) ?? 'OPEN',
   );
+  const [ticker, setTicker] = useState(initialValues?.ticker ?? '');
+  const [exchangeMicCode, setExchangeMicCode] = useState<string | null>(
+    initialValues?.exchangeMicCode || null,
+  );
 
   const fields = usePositionFormFields(status);
   const createMutation = useCreatePositionMutation();
@@ -42,7 +47,11 @@ export default function PositionForm({
   };
 
   const handleSubmit = async (values: Record<string, string>) => {
-    const input = mapFormValuesToPositionInput(values);
+    const input = mapFormValuesToPositionInput({
+      ...values,
+      ticker,
+      exchangeMicCode: exchangeMicCode ?? '',
+    });
 
     if (mode === 'create') {
       await createMutation.mutateAsync(input);
@@ -66,6 +75,17 @@ export default function PositionForm({
         onSubmit={handleSubmit}
         initialValues={initialValues}
         errorMessage={error ?? undefined}
+        leadingChildren={
+          <TickerAutocomplete
+            ticker={ticker}
+            micCode={exchangeMicCode}
+            onChange={(nextTicker, nextMicCode) => {
+              setTicker(nextTicker);
+              setExchangeMicCode(nextMicCode);
+            }}
+            required
+          />
+        }
         submitLabel={
           mutation.isPending
             ? 'Saving...'

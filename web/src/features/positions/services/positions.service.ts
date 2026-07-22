@@ -13,6 +13,7 @@ export interface Position {
   id: string;
   broker: Broker;
   ticker: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType: AssetType;
   quantity: string;
@@ -28,6 +29,7 @@ export interface Position {
 export type CreatePositionInput = {
   broker: Broker;
   ticker: string;
+  exchangeMicCode?: string;
   name?: string;
   assetType?: AssetType;
   quantity: string;

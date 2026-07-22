@@ -45,6 +45,7 @@ model Position {
 
   broker          Broker
   ticker          String
+  exchangeMicCode String?
   name            String?
   assetType       AssetType      @default(STOCK)
 
