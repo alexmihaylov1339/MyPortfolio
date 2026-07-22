@@ -96,14 +96,31 @@ export class MarketPricesService {
     const fetched = await this.fetchPrice(ticker, micCode);
     if (fetched) {
       this.cache.set(key, { price: fetched, fetchedAt: Date.now() });
+      await this.persistPrice(ticker, micCode, fetched);
       return fetched;
     }
 
     if (cached) {
       this.logger.warn(
-        `Falling back to stale cached price for ${key} after a failed fetch`,
+        `Falling back to stale in-memory price for ${key} after a failed fetch`,
       );
       return cached.price;
+    }
+
+    // No in-memory cache — e.g. right after a server restart, which wipes
+    // it entirely. Fall back to the last price ever successfully fetched
+    // and persisted for this ticker+exchange, rather than reporting
+    // unavailable just because the process restarted.
+    const persisted = await this.loadPersistedPrice(ticker, micCode);
+    if (persisted) {
+      this.cache.set(key, {
+        price: persisted.price,
+        fetchedAt: persisted.fetchedAt.getTime(),
+      });
+      this.logger.warn(
+        `Falling back to database-persisted price for ${key} (fetched ${persisted.fetchedAt.toISOString()}) after a failed fetch`,
+      );
+      return persisted.price;
     }
 
     return null;
@@ -217,6 +234,45 @@ export class MarketPricesService {
     } catch (error) {
       this.logger.warn(
         `Twelve Data request for ${ticker} threw an error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    }
+  }
+
+  private async persistPrice(
+    ticker: string,
+    micCode: string | null | undefined,
+    price: Prisma.Decimal,
+  ): Promise<void> {
+    try {
+      await this.prisma.marketPrice.upsert({
+        where: { ticker_micCode: { ticker, micCode: micCode ?? '' } },
+        create: { ticker, micCode: micCode ?? '', price },
+        update: { price, fetchedAt: new Date() },
+      });
+    } catch (error) {
+      // A persistence failure shouldn't prevent returning the freshly
+      // fetched price to the caller — the in-memory cache still has it.
+      this.logger.warn(
+        `Failed to persist price for ${cacheKey(ticker, micCode)}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadPersistedPrice(
+    ticker: string,
+    micCode?: string | null,
+  ): Promise<{ price: Prisma.Decimal; fetchedAt: Date } | null> {
+    try {
+      const record = await this.prisma.marketPrice.findUnique({
+        where: { ticker_micCode: { ticker, micCode: micCode ?? '' } },
+      });
+      return record
+        ? { price: record.price, fetchedAt: record.fetchedAt }
+        : null;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to load persisted price for ${cacheKey(ticker, micCode)}: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }

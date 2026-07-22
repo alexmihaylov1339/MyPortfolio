@@ -94,3 +94,21 @@ model ModelAllocation {
   @@index([modelPortfolioId])
   @@unique([modelPortfolioId, ticker])
 }
+
+/**
+ * The last price successfully fetched for a ticker+exchange pair, persisted
+ * so it survives an API server restart — MarketPricesService's in-memory
+ * cache alone would otherwise reset to empty on every deploy/restart,
+ * making positions look priceless again until a fresh fetch succeeds.
+ * micCode is "" (not null) for tickers with no exchange qualifier, so the
+ * unique constraint behaves correctly (Postgres treats NULL != NULL).
+ */
+model MarketPrice {
+  id        String   @id @default(cuid())
+  ticker    String
+  micCode   String   @default("")
+  price     Decimal
+  fetchedAt DateTime @default(now())
+
+  @@unique([ticker, micCode])
+}
