@@ -1,18 +1,38 @@
-@use '@/styles/colors.scss' as *;
-
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .label {
   display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-strong);
 }
 
 .required {
-  color: $error-red;
+  color: var(--color-destructive-text);
 }
 
 .input {
-  padding: 8px;
+  padding: 8px 10px;
   width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink-strong);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 3px var(--color-brand-contrast);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

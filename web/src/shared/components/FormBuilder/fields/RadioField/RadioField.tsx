@@ -28,6 +28,7 @@ export default function RadioField({ config, disabled }: RadioFieldProps) {
               value={option.value}
               required={config.required}
               disabled={disabled || config.disabled}
+              className={styles.radio}
             />
             {option.label}
           </label>

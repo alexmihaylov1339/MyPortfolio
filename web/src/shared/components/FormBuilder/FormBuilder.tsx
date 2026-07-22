@@ -9,6 +9,12 @@ import { isNumber, isString, isUndefined } from '@shared/utils';
 
 import type { FormBuilderProps } from './types';
 
+const DEFAULT_SUBMIT_BUTTON_CLASSNAME =
+  'mt-2 rounded-[var(--radius-control)] bg-brand-accent px-[18px] py-[10px] text-sm font-semibold text-brand-accent-ink transition hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-60';
+
+const DEFAULT_DELETE_BUTTON_CLASSNAME =
+  'mt-2 rounded-[var(--radius-control)] border border-destructive-line px-[18px] py-[10px] text-sm font-semibold text-destructive-text transition hover:bg-destructive-soft disabled:cursor-not-allowed disabled:opacity-60';
+
 export default function FormBuilder<TFormValues = Record<string, unknown>>({
   fields,
   onSubmit,
@@ -120,17 +126,25 @@ export default function FormBuilder<TFormValues = Record<string, unknown>>({
               type="button"
               onClick={handleDelete}
               isLoading={isDeleting || isDeletePending}
-              className={deleteButtonClassName}
+              className={deleteButtonClassName ?? DEFAULT_DELETE_BUTTON_CLASSNAME}
             >
               {deleteLabel}
             </Button>
           )}
-          <Button type="submit" isLoading={isPending} className={submitButtonClassName}>
+          <Button
+            type="submit"
+            isLoading={isPending}
+            className={submitButtonClassName ?? DEFAULT_SUBMIT_BUTTON_CLASSNAME}
+          >
             {submitLabel}
           </Button>
         </div>
       ) : (
-        <Button type="submit" isLoading={isPending} className={submitButtonClassName}>
+        <Button
+          type="submit"
+          isLoading={isPending}
+          className={submitButtonClassName ?? DEFAULT_SUBMIT_BUTTON_CLASSNAME}
+        >
           {submitLabel}
         </Button>
       )}

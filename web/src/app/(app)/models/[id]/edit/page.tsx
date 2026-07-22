@@ -18,7 +18,7 @@ export default function EditModelPage() {
       <h1 className="mb-6 text-xl font-semibold text-ink-strong">
         Edit model
       </h1>
-      <div className="max-w-md">
+      <div className="max-w-md rounded-[var(--radius-card)] border border-line-soft bg-surface p-6 shadow-card">
         {isLoading && <PageLoader />}
         {isError && <ErrorMessage message="Could not load model." />}
         {model && (

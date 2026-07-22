@@ -34,12 +34,12 @@ export default function UpdateAccountForm() {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-gray-600">Loading…</p>;
+    return <p className="text-sm text-ink-muted">Loading…</p>;
   }
 
   if (isError) {
     return (
-      <p className="text-sm text-[var(--destructive)]" role="alert">
+      <p className="text-sm text-destructive-text" role="alert">
         {error instanceof Error ? error.message : 'Failed to load account'}
       </p>
     );
@@ -57,7 +57,7 @@ export default function UpdateAccountForm() {
       className="border-none p-0 m-0 min-w-0"
     >
       {submitError && (
-        <p className="mb-4 text-sm text-[var(--destructive)]" role="alert">
+        <p className="mb-4 text-sm text-destructive-text" role="alert">
           {submitError}
         </p>
       )}
@@ -66,7 +66,6 @@ export default function UpdateAccountForm() {
         initialValues={initialValues}
         onSubmit={handleSubmit}
         submitLabel={mutation.isPending ? 'Updating…' : 'Update account'}
-        submitButtonClassName="rounded-md bg-[var(--primary)] px-4 py-2 text-white disabled:opacity-60"
       />
     </fieldset>
   );

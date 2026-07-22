@@ -1,7 +1,5 @@
-@use '@/styles/colors.scss' as *;
-
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .label {
@@ -9,9 +7,16 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  font-size: 14px;
+  color: var(--color-ink-strong);
 }
 
 .required {
-  color: $error-red;
+  color: var(--color-destructive-text);
 }
 
+.checkbox {
+  accent-color: var(--color-brand-accent);
+  width: 16px;
+  height: 16px;
+}

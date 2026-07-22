@@ -8,7 +8,7 @@ export default function NewModelPage() {
       <h1 className="mb-6 text-xl font-semibold text-ink-strong">
         Add model
       </h1>
-      <div className="max-w-md">
+      <div className="max-w-md rounded-[var(--radius-card)] border border-line-soft bg-surface p-6 shadow-card">
         <ModelForm mode="create" />
       </div>
     </>

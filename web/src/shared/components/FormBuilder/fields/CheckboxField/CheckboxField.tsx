@@ -18,6 +18,7 @@ export default function CheckboxField({ config, disabled }: CheckboxFieldProps) 
           defaultChecked={config.defaultChecked}
           required={config.required}
           disabled={disabled || config.disabled}
+          className={styles.checkbox}
         />
         {config.label}
         {config.required && <span className={styles.required}>*</span>}
