@@ -116,7 +116,7 @@ interface ModelPortfolioResponse {
 
 ## Step-by-step tasks
 
-### T1 - Prisma `ModelPortfolio` + `ModelAllocation` models + migration
+### T1 - Prisma `ModelPortfolio` + `ModelAllocation` models + migration — Done
 
 Tasks:
 - Add both models and the `User.models` relation per the schema above.
@@ -124,6 +124,13 @@ Tasks:
 
 Acceptance:
 - `prisma validate` passes; migration applied to Supabase; `npx prisma generate` succeeds; both relations compile.
+
+**Verification completed:**
+- `prisma validate` → schema valid.
+- Migration `20260722000000_add_model_portfolio` generated offline (schema-to-schema diff, no DB connection needed) and applied over port 6543 with the same `pg`-client + `_prisma_migrations` bookkeeping workaround used for the two prior migrations.
+- `ModelPortfolio`, `ModelAllocation` confirmed live in Supabase alongside `User`/`Position`/`_prisma_migrations`.
+- `npx prisma generate` succeeded; the generated client exposes `modelPortfolio` and `modelAllocation` delegates.
+- `npm run build` and `npm test` (30/30, unchanged) pass.
 
 ---
 
