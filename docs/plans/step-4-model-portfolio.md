@@ -185,7 +185,7 @@ Acceptance:
 
 ---
 
-### T5 - Frontend models service + hooks
+### T5 - Frontend models service + hooks — Done
 
 Tasks:
 - `models.service.ts` via `ManageService` + `getAuthHeaders()`, mirroring `positions.service.ts`.
@@ -193,6 +193,12 @@ Tasks:
 
 Acceptance:
 - Hooks compile; full exercise happens once T7's pages land.
+
+**Verification completed:**
+- Added `models/{constants,services}` and `models/list/hooks/{useModelsQuery,useDeleteModelMutation,useDeleteModelWithConfirmation}.ts`, `models/form/hooks/{useModelQuery,useCreateModelMutation,useUpdateModelMutation}.ts` — structure mirrors `features/positions/` exactly, including the `window.confirm`-based delete-with-confirmation hook.
+- Unlike positions (where the single-item query hook was deferred from T4 to T6/edit), `useModelQuery` is included here since T5's own task list calls for it explicitly — no reason to re-run the same deferral once the pattern's already proven.
+- Query keys use a plain `['models']` / `['models', id]` namespace (no cross-feature sharing like positions/dashboard's deliberate `['positions', 'summary']` link) — nothing else reads model data yet; that link becomes relevant once Step 5 exists.
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (217/217, unchanged), `npm run build` all pass.
 
 ---
 
