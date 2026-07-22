@@ -84,7 +84,7 @@ interface RebalanceComparisonResponse {
 
 ## Step-by-step tasks
 
-### T1 - Pure diff calculation helper
+### T1 - Pure diff calculation helper — Done
 
 Tasks:
 - `rebalance-diff.ts`: `calculateRebalanceDiff(currencySummary: CurrencySummary | null, allocations: ModelAllocationLike[]): RebalanceComparisonInput` — takes the *already-computed* per-currency summary (from `calculatePositionsSummary`, picking the largest group by `totalInvested` at the call site, not inside this function) and the model's allocations, returns the union-of-tickers diff described in the response contract.
@@ -93,6 +93,11 @@ Tasks:
 
 Acceptance:
 - Pure function compiles, no Prisma/Nest dependency, ready for T2.
+
+**Verification completed:**
+- `calculateRebalanceDiff` takes a `CurrencySummary | null` (imported from `positions-summary.ts`, reused rather than recomputed) and `Pick<ModelAllocation, 'ticker' | 'targetPercent'>[]` — no Prisma/Nest dependency, pure and unit-testable.
+- Union-of-tickers built from two `Map`s (actual, target), sorted alphabetically for deterministic output; `Prisma.Decimal` throughout (`.minus()`, `.isZero()`, `.isPositive()`) — never a `Number()` roundtrip for the difference itself.
+- `npm run build` passes. Manual sanity check confirmed all three cases: a ticker in both (over/underweight math correct), model-only ticker (`VOO`, 0% actual, fully underweight), positions-only ticker (`TSLA`, 0% target, fully overweight), and the `null`-currency zero-positions case (every model ticker fully underweight, `currency: null`).
 
 ---
 
