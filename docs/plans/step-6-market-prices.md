@@ -130,7 +130,7 @@ Acceptance:
 
 ---
 
-### T3 - `MarketPricesService` (Twelve Data client + cache)
+### T3 - `MarketPricesService` (Twelve Data client + cache) — Done
 
 Tasks:
 - `getPrice(ticker)`: check the in-memory cache (15-minute TTL); on a miss or expiry, call Twelve Data's `/price` endpoint; on fetch failure, fall back to a stale cache entry if one exists, else return `null`.
@@ -139,6 +139,10 @@ Tasks:
 
 Acceptance:
 - Compiles and boots without a key present (the service simply returns `null` prices / logs a clear error if the env var is missing, rather than crashing the app). Live-price correctness verified once the key exists (T7).
+
+**Verification completed:**
+- `market-prices.service.ts` — lazy `process.env.TWELVE_DATA_API_KEY` read (mirrors `email.service.ts`'s missing-credential pattern: log and return `null`/no-op, never throw), native `fetch` (no new HTTP dependency needed on Node 24), in-memory `Map<ticker, {price, fetchedAt}>` cache with a 15-minute TTL constant.
+- `market-prices.service.spec.ts` — 6 tests with `global.fetch` mocked (never hits the real API): cache miss fetches, fresh cache hit skips a second fetch, a failed fetch after TTL expiry falls back to the stale cached price, no cache + failed fetch returns `null`, missing API key returns `null` without calling `fetch` at all, `getPrices` dedupes tickers into one call. `npm test -- market-prices` — all 13 (7 from T2 + 6 new) passed. `npm run build` passes cleanly with no `TWELVE_DATA_API_KEY` set in this environment, confirming it boots without the key as required.
 
 ---
 
