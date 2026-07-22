@@ -35,3 +35,32 @@ export function getPositionsSummary(): Promise<PositionsSummary> {
     .setHeaders(getAuthHeaders())
     .execRequest<PositionsSummary>();
 }
+
+export interface PositionPnl {
+  positionId: string;
+  ticker: string;
+  quantity: string;
+  averageBuyPrice: string;
+  currentPrice: string | null;
+  currentValue: string | null;
+  unrealizedPnl: string | null;
+  unrealizedPnlPercent: string | null;
+}
+
+export interface CurrencyPnlSummary {
+  currency: string;
+  totalCurrentValue: string;
+  totalUnrealizedPnl: string;
+  positions: PositionPnl[];
+}
+
+export interface PortfolioPnl {
+  currencies: CurrencyPnlSummary[];
+}
+
+export function getPortfolioPnl(): Promise<PortfolioPnl> {
+  return api
+    .prepareRequest(DASHBOARD_ENDPOINTS.PNL, HTTP_METHODS.GET)
+    .setHeaders(getAuthHeaders())
+    .execRequest<PortfolioPnl>();
+}

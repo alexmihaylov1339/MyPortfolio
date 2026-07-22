@@ -163,7 +163,7 @@ Acceptance:
 
 ---
 
-### T5 - Frontend service + hook
+### T5 - Frontend service + hook — Done
 
 Tasks:
 - Add `getPortfolioPnl()` to the dashboard feature's service (or a small `market-prices.service.ts` alongside it) + `usePortfolioPnlQuery()`.
@@ -171,6 +171,11 @@ Tasks:
 
 Acceptance:
 - Hook compiles; full exercise once T6's UI exists.
+
+**Verification completed:**
+- `getPortfolioPnl()` added to `dashboard.service.ts` alongside `getPositionsSummary()` (same file, not a new one — small enough not to warrant a separate `market-prices.service.ts` on the frontend). `PNL: '/positions/pnl'` added to `DASHBOARD_ENDPOINTS`.
+- `usePortfolioPnlQuery()` uses `queryKey: ['positions', 'pnl']` — same `'positions'` prefix as `useDashboardSummaryQuery`'s `['positions', 'summary']`, so it's automatically refreshed by the existing positions create/update/delete mutations' `invalidateQueries({ queryKey: ['positions'] })` without any new wiring.
+- `npx tsc --noEmit` passes with no errors.
 
 ---
 
