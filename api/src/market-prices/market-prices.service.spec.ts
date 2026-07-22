@@ -4,7 +4,7 @@ function mockFetchOnce(body: unknown, ok = true, status = 200) {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok,
     status,
-    json: async () => body,
+    json: () => Promise.resolve(body),
   });
 }
 
@@ -25,7 +25,7 @@ describe('MarketPricesService', () => {
 
   it('fetches and returns a price on a cache miss', async () => {
     mockFetchOnce({ price: '150.25' });
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
 
     const price = await service.getPrice('AAPL');
 
@@ -35,7 +35,7 @@ describe('MarketPricesService', () => {
 
   it('serves a fresh cache hit without calling fetch again', async () => {
     mockFetchOnce({ price: '150.25' });
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
 
     await service.getPrice('AAPL');
     const second = await service.getPrice('AAPL');
@@ -47,14 +47,14 @@ describe('MarketPricesService', () => {
   it('falls back to a stale cache entry when a later fetch fails', async () => {
     jest.useFakeTimers();
     mockFetchOnce({ price: '150.25' });
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
     await service.getPrice('AAPL');
 
     jest.advanceTimersByTime(16 * 60 * 1000);
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 500,
-      json: async () => ({}),
+      json: () => Promise.resolve({}),
     });
 
     const price = await service.getPrice('AAPL');
@@ -64,7 +64,7 @@ describe('MarketPricesService', () => {
 
   it('returns null when there is no cache and the fetch fails', async () => {
     mockFetchOnce({}, false, 500);
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
 
     const price = await service.getPrice('UNKNOWN');
 
@@ -73,7 +73,7 @@ describe('MarketPricesService', () => {
 
   it('returns null without calling fetch when the API key is missing', async () => {
     delete process.env.TWELVE_DATA_API_KEY;
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
 
     const price = await service.getPrice('AAPL');
 
@@ -83,7 +83,7 @@ describe('MarketPricesService', () => {
 
   it('dedupes tickers and returns a map keyed by ticker', async () => {
     mockFetchOnce({ price: '150.25' });
-    const service = new MarketPricesService();
+    const service = new MarketPricesService({} as never);
 
     const prices = await service.getPrices(['AAPL', 'AAPL']);
 

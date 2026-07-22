@@ -1,5 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, PositionStatus } from '@prisma/client';
+
+import { PrismaService } from '../../prisma/prisma.service';
+import {
+  calculatePortfolioPnl,
+  type PortfolioPnlResponse,
+} from './portfolio-pnl';
 
 const TWELVE_DATA_PRICE_URL = 'https://api.twelvedata.com/price';
 const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -13,6 +19,19 @@ interface CacheEntry {
 export class MarketPricesService {
   private readonly logger = new Logger(MarketPricesService.name);
   private readonly cache = new Map<string, CacheEntry>();
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getPortfolioPnlForUser(userId: string): Promise<PortfolioPnlResponse> {
+    const positions = await this.prisma.position.findMany({
+      where: { userId, status: PositionStatus.OPEN },
+    });
+
+    const tickers = positions.map((position) => position.ticker);
+    const prices = await this.getPrices(tickers);
+
+    return calculatePortfolioPnl(positions, prices);
+  }
 
   async getPrice(ticker: string): Promise<Prisma.Decimal | null> {
     const cached = this.cache.get(ticker);
@@ -70,7 +89,7 @@ export class MarketPricesService {
       const body: unknown = await response.json();
       const price =
         typeof body === 'object' && body !== null && 'price' in body
-          ? (body as { price: unknown }).price
+          ? body.price
           : undefined;
 
       if (typeof price !== 'string' || price.trim() === '') {

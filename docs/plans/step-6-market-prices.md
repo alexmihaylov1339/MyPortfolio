@@ -146,7 +146,7 @@ Acceptance:
 
 ---
 
-### T4 - Backend endpoint
+### T4 - Backend endpoint — Done
 
 Tasks:
 - `GET /positions/pnl`, auth-protected, user-scoped, in a new `MarketPricesModule` — imports only `AuthModule`, fetches the user's open positions directly via `PrismaService`, gets prices via `MarketPricesService`, calls `calculatePortfolioPnl`.
@@ -154,6 +154,12 @@ Tasks:
 
 Acceptance:
 - Authenticated request returns a correct, user-scoped P&L response; a position whose ticker fails to price shows as unavailable, not a broken response; verified against real data once the API key exists.
+
+**Verification completed:**
+- **Real routing collision found and fixed before it could ship.** `MarketPricesController` shares the `positions` prefix with the existing `PositionsController` (to get the exact `GET /positions/pnl` URL the plan specifies), and `PositionsController` already has a dynamic `GET /positions/:id` route. Express/Nest match routes in registration order across the whole app, not scoped per-controller — if `PositionsModule` registered first, `GET /positions/pnl` would have matched `:id` (with `id = 'pnl'`) and returned a 404 from the wrong handler, never reaching the new code. Fixed by importing `MarketPricesModule` **before** `PositionsModule` in `app.module.ts` (comment left in place explaining why), so the literal `pnl` route registers first. Confirmed via the live `[RouterExplorer]` boot log: `Mapped {/v1/positions/pnl, GET}` is registered before `Mapped {/v1/positions/:id, GET}`.
+- Live-verified end-to-end against the running dev server (no `TWELVE_DATA_API_KEY` set in this environment): `GET /positions/pnl` with zero positions → `{"currencies":[]}`; `GET /positions/:id` with a real id still 404s correctly for a nonexistent id (unaffected by the new controller); created a real `AAPL` position → `GET /positions/pnl` returned it with all price fields `null` (graceful degradation, no crash, matches the "no key = no prices, never fake it" contract) while `totalCurrentValue`/`totalUnrealizedPnl` stayed `0.00` (nothing priced to sum); `GET /positions/summary` (Step 3) re-verified unchanged and still correct after all of this; test position deleted afterward.
+- `getPortfolioPnlForUser` was added directly to `MarketPricesService` (not a separate service) since it mirrors `rebalance.service.ts`'s own shape: one service per controller owning its full use case (own Prisma query + calls the pure calculation), controller stays thin.
+- Full `npm run build`, `npm run lint`, `npm test` (68 tests across 9 suites) all pass.
 
 ---
 
