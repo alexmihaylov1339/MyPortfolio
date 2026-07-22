@@ -116,7 +116,7 @@ Acceptance:
 
 ---
 
-### T3 - Backend endpoint
+### T3 - Backend endpoint — Done
 
 Tasks:
 - `GET /rebalance`, auth-protected, user-scoped.
@@ -125,6 +125,12 @@ Tasks:
 
 Acceptance:
 - Authenticated request returns a correct, user-scoped diff; a user with no default model gets a clear, distinct response (not a generic error); verified against real data.
+
+**Verification completed:**
+- **No-default-model resolved as `200` with `hasDefaultModel: false`, not a `404`** — this is a normal, expected state for any new user (same reasoning Step 3 used for a positions-less dashboard), not an error condition.
+- `RebalanceService.findLargestCurrency` compares `totalInvested` via `Prisma.Decimal.greaterThan`, never a `Number()` roundtrip. `RebalanceModule` imports only `AuthModule`, confirming the "reuse the plain function, don't couple modules" design held in practice.
+- `npm run build` and `npm test` (55/55, unchanged — T3 is thin wiring over already-tested T1/T2 logic) pass.
+- Full live verification against Supabase: no model → `{"hasDefaultModel":false,"currency":null,"entries":[],"excludedCurrencies":[]}`; model + zero positions → both tickers `UNDERWEIGHT` at `-target`, `currency: null`; model + USD positions (`AAPL`, `TSLA`) + a smaller EUR position (`MSFT`) → `currency: "USD"` (correctly the larger group), `excludedCurrencies: ["EUR"]`, `AAPL` `OVERWEIGHT` (50% actual vs 30% target), `TSLA` `OVERWEIGHT` (held but not in the model), `VOO` `UNDERWEIGHT` (in the model, not held); unauthenticated → `401`. Test data cleaned up afterward.
 
 ---
 
