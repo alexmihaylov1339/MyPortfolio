@@ -14,3 +14,5 @@ export { Notification, NotificationContainer } from './Notification';
 export type { NotificationProps, NotificationType, NotificationData } from './Notification';
 
 export { AuthProvider, ProtectedRoute, GuestOnlyRoute, useAuth } from './AuthProvider';
+
+export { default as AppNav } from './AppNav/AppNav';

@@ -1,0 +1,16 @@
+'use client';
+
+import { LogoutButton, UpdateAccountForm } from '@features/auth/account/components';
+
+export default function AccountPage() {
+  return (
+    <>
+      <h1 className="mb-6 text-xl font-semibold text-ink-strong">Account</h1>
+
+      <div className="max-w-md">
+        <UpdateAccountForm />
+        <LogoutButton />
+      </div>
+    </>
+  );
+}
