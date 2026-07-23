@@ -2,11 +2,22 @@ import { Prisma } from '@prisma/client';
 
 import { MarketPricesService } from './market-prices.service';
 
-function mockFetchOnce(body: unknown, ok = true, status = 200) {
+function mockChartFetchOnce(price: number, ok = true, status = 200) {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok,
     status,
-    json: () => Promise.resolve(body),
+    json: () =>
+      Promise.resolve({
+        chart: { result: [{ meta: { regularMarketPrice: price } }] },
+      }),
+  });
+}
+
+function mockFailedFetchOnce(status = 500) {
+  (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ok: false,
+    status,
+    json: () => Promise.resolve({}),
   });
 }
 
@@ -29,21 +40,18 @@ function mockPrisma() {
 
 describe('MarketPricesService', () => {
   const originalFetch = global.fetch;
-  const originalApiKey = process.env.TWELVE_DATA_API_KEY;
 
   beforeEach(() => {
     global.fetch = jest.fn();
-    process.env.TWELVE_DATA_API_KEY = 'test-key';
   });
 
   afterEach(() => {
     global.fetch = originalFetch;
-    process.env.TWELVE_DATA_API_KEY = originalApiKey;
     jest.useRealTimers();
   });
 
   it('fetches and returns a price on a cache miss', async () => {
-    mockFetchOnce({ price: '150.25' });
+    mockChartFetchOnce(150.25);
     const service = new MarketPricesService({} as never);
 
     const price = await service.getPrice('AAPL');
@@ -52,8 +60,21 @@ describe('MarketPricesService', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
+  it('sends a browser-like User-Agent (Yahoo rejects requests without one)', async () => {
+    mockChartFetchOnce(150.25);
+    const service = new MarketPricesService({} as never);
+
+    await service.getPrice('AAPL');
+
+    const calls = (global.fetch as jest.Mock).mock.calls as [
+      string,
+      { headers: Record<string, string> },
+    ][];
+    expect(calls[0][1].headers['User-Agent']).toBeTruthy();
+  });
+
   it('serves a fresh cache hit without calling fetch again', async () => {
-    mockFetchOnce({ price: '150.25' });
+    mockChartFetchOnce(150.25);
     const service = new MarketPricesService({} as never);
 
     await service.getPrice('AAPL');
@@ -65,24 +86,20 @@ describe('MarketPricesService', () => {
 
   it('falls back to a stale cache entry when a later fetch fails', async () => {
     jest.useFakeTimers();
-    mockFetchOnce({ price: '150.25' });
+    mockChartFetchOnce(150.25);
     const service = new MarketPricesService({} as never);
     await service.getPrice('AAPL');
 
     jest.advanceTimersByTime(16 * 60 * 1000);
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: () => Promise.resolve({}),
-    });
+    mockFailedFetchOnce();
 
     const price = await service.getPrice('AAPL');
 
     expect(price?.toString()).toBe('150.25');
   });
 
-  it('returns null when there is no cache and the fetch fails', async () => {
-    mockFetchOnce({}, false, 500);
+  it('returns null when there is no cache, no persisted price, and the fetch fails', async () => {
+    mockFailedFetchOnce();
     const service = new MarketPricesService({} as never);
 
     const price = await service.getPrice('UNKNOWN');
@@ -90,18 +107,8 @@ describe('MarketPricesService', () => {
     expect(price).toBeNull();
   });
 
-  it('returns null without calling fetch when the API key is missing', async () => {
-    delete process.env.TWELVE_DATA_API_KEY;
-    const service = new MarketPricesService({} as never);
-
-    const price = await service.getPrice('AAPL');
-
-    expect(price).toBeNull();
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
   it('dedupes identical ticker+exchange requests and returns a map keyed by ticker', async () => {
-    mockFetchOnce({ price: '150.25' });
+    mockChartFetchOnce(150.25);
     const service = new MarketPricesService({} as never);
 
     const prices = await service.getPrices([
@@ -113,32 +120,35 @@ describe('MarketPricesService', () => {
     expect(prices.get('AAPL')?.toString()).toBe('150.25');
   });
 
-  it('passes mic_code through to Twelve Data and caches it separately from the bare ticker', async () => {
+  it('queries the full exchange-qualified symbol when given, and the bare ticker otherwise', async () => {
     // Same ticker, two different companies on two different exchanges — a
-    // real scenario (e.g. "DSN" is Danske Bank in Germany vs. an unrelated
-    // US OTC stock). Each must be fetched and cached independently.
-    mockFetchOnce({ price: '100.50' });
-    mockFetchOnce({ price: '5.25' });
+    // real scenario (e.g. "DSN" is Danske Bank on Frankfurt vs. an
+    // unrelated instrument under the bare symbol). Each must be fetched
+    // and cached independently, using Yahoo's combined ticker.exchange
+    // symbol format.
+    mockChartFetchOnce(49.18);
+    mockChartFetchOnce(5.25);
     const service = new MarketPricesService({} as never);
 
-    const german = await service.getPrice('DSN', 'XETR');
+    const german = await service.getPrice('DSN', 'DSN.F');
     const bare = await service.getPrice('DSN');
 
-    expect(german?.toString()).toBe('100.5');
+    expect(german?.toString()).toBe('49.18');
     expect(bare?.toString()).toBe('5.25');
     expect(global.fetch).toHaveBeenCalledTimes(2);
     const calls = (global.fetch as jest.Mock).mock.calls as string[][];
-    expect(calls[0][0]).toContain('mic_code=XETR');
-    expect(calls[1][0]).not.toContain('mic_code');
+    expect(calls[0][0]).toContain('/DSN.F');
+    expect(calls[1][0]).toContain('/DSN');
+    expect(calls[1][0]).not.toContain('DSN.F');
   });
 
   it('getPrices dedupes by ticker+exchange, not ticker alone', async () => {
-    mockFetchOnce({ price: '100.00' });
-    mockFetchOnce({ price: '5.00' });
+    mockChartFetchOnce(49.18);
+    mockChartFetchOnce(5.25);
     const service = new MarketPricesService({} as never);
 
     await service.getPrices([
-      { ticker: 'DSN', micCode: 'XETR' },
+      { ticker: 'DSN', micCode: 'DSN.F' },
       { ticker: 'DSN', micCode: null },
     ]);
 
@@ -146,19 +156,21 @@ describe('MarketPricesService', () => {
   });
 
   describe('searchSymbols', () => {
-    it('maps Twelve Data search results', async () => {
-      mockFetchOnce({
-        data: [
-          {
-            symbol: 'DSN',
-            instrument_name: 'Danske Bank A/S',
-            exchange: 'XETR',
-            mic_code: 'XETR',
-            country: 'Germany',
-            currency: 'EUR',
-            instrument_type: 'Common Stock',
-          },
-        ],
+    it('maps Yahoo Finance search results, splitting the display ticker from the exchange-qualified symbol', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            quotes: [
+              {
+                symbol: 'DSN.F',
+                quoteType: 'EQUITY',
+                shortname: 'Danske Bank A/S',
+                exchDisp: 'Frankfurt',
+              },
+            ],
+          }),
       });
       const service = new MarketPricesService({} as never);
 
@@ -168,13 +180,37 @@ describe('MarketPricesService', () => {
         {
           symbol: 'DSN',
           name: 'Danske Bank A/S',
-          exchange: 'XETR',
-          micCode: 'XETR',
-          country: 'Germany',
-          currency: 'EUR',
-          instrumentType: 'Common Stock',
+          exchange: 'Frankfurt',
+          micCode: 'DSN.F',
+          country: '',
+          currency: '',
+          instrumentType: 'EQUITY',
         },
       ]);
+    });
+
+    it('filters out non-equity/ETF quote types (e.g. currencies, crypto, indices)', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            quotes: [
+              { symbol: 'AAPL', quoteType: 'EQUITY', shortname: 'Apple Inc.' },
+              {
+                symbol: 'BTC-USD',
+                quoteType: 'CRYPTOCURRENCY',
+                shortname: 'Bitcoin',
+              },
+              { symbol: '^GSPC', quoteType: 'INDEX', shortname: 'S&P 500' },
+            ],
+          }),
+      });
+      const service = new MarketPricesService({} as never);
+
+      const results = await service.searchSymbols('a');
+
+      expect(results.map((r) => r.symbol)).toEqual(['AAPL']);
     });
 
     it('returns an empty list without calling fetch for a blank query', async () => {
@@ -186,18 +222,8 @@ describe('MarketPricesService', () => {
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it('returns an empty list when the API key is missing', async () => {
-      delete process.env.TWELVE_DATA_API_KEY;
-      const service = new MarketPricesService({} as never);
-
-      const results = await service.searchSymbols('DSN');
-
-      expect(results).toEqual([]);
-      expect(global.fetch).not.toHaveBeenCalled();
-    });
-
     it('returns an empty list when the request fails', async () => {
-      mockFetchOnce({}, false, 500);
+      mockFailedFetchOnce();
       const service = new MarketPricesService({} as never);
 
       const results = await service.searchSymbols('DSN');
@@ -208,19 +234,19 @@ describe('MarketPricesService', () => {
 
   describe('price persistence (survives a server restart)', () => {
     it('persists a freshly fetched price to the database', async () => {
-      mockFetchOnce({ price: '150.25' });
+      mockChartFetchOnce(150.25);
       const prisma = mockPrisma();
       const service = new MarketPricesService(prisma as never);
 
-      await service.getPrice('AAPL', 'XNAS');
+      await service.getPrice('AAPL', 'AAPL');
 
       expect(prisma.marketPrice.upsert).toHaveBeenCalledTimes(1);
       const call = prisma.marketPrice.upsert.mock.calls[0][0];
       expect(call.where).toEqual({
-        ticker_micCode: { ticker: 'AAPL', micCode: 'XNAS' },
+        ticker_micCode: { ticker: 'AAPL', micCode: 'AAPL' },
       });
       expect(call.create.ticker).toBe('AAPL');
-      expect(call.create.micCode).toBe('XNAS');
+      expect(call.create.micCode).toBe('AAPL');
       expect(call.create.price.toString()).toBe('150.25');
       expect(call.update.price.toString()).toBe('150.25');
       expect(call.update.fetchedAt).toBeInstanceOf(Date);
@@ -230,7 +256,7 @@ describe('MarketPricesService', () => {
       // Simulates a server restart: the in-memory cache is empty (a fresh
       // service instance), but a price for this ticker was persisted by an
       // earlier successful fetch — that's the whole point of persisting it.
-      mockFetchOnce({}, false, 500);
+      mockFailedFetchOnce();
       const prisma = mockPrisma();
       const fetchedAt = new Date('2026-01-01T00:00:00.000Z');
       prisma.marketPrice.findUnique.mockResolvedValue({
@@ -250,7 +276,7 @@ describe('MarketPricesService', () => {
     });
 
     it('does not query the database when a fresh in-memory cache entry already exists', async () => {
-      mockFetchOnce({ price: '150.25' });
+      mockChartFetchOnce(150.25);
       const prisma = mockPrisma();
       const service = new MarketPricesService(prisma as never);
 
@@ -262,7 +288,7 @@ describe('MarketPricesService', () => {
     });
 
     it('still returns null when neither a fetch nor a persisted price is available', async () => {
-      mockFetchOnce({}, false, 500);
+      mockFailedFetchOnce();
       const prisma = mockPrisma();
       const service = new MarketPricesService(prisma as never);
 

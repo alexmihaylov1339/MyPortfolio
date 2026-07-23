@@ -7,10 +7,21 @@ import {
   type PortfolioPnlResponse,
 } from './portfolio-pnl';
 
-const TWELVE_DATA_PRICE_URL = 'https://api.twelvedata.com/price';
-const TWELVE_DATA_SEARCH_URL = 'https://api.twelvedata.com/symbol_search';
+// Yahoo Finance's public (unofficial, undocumented, no-API-key) endpoints.
+// Switched to from Twelve Data because Twelve Data's free plan gates real,
+// non-exotic listings behind a paid tier (confirmed: every exchange listing
+// of Danske Bank A/S, live price *and* end-of-day/historical, all returned
+// "available starting with the Grow or Venture plan"). Yahoo has no such
+// gate and needs no signup, at the cost of being an unofficial endpoint
+// Yahoo could change or rate-limit without notice — acceptable for a
+// personal single-user dashboard, revisit if it ever becomes unreliable.
+const YAHOO_CHART_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
+const YAHOO_SEARCH_URL = 'https://query1.finance.yahoo.com/v1/finance/search';
+// Yahoo's edge returns 429 on every request without a browser-like UA.
+const YAHOO_HEADERS = { 'User-Agent': 'Mozilla/5.0' };
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const MAX_SEARCH_RESULTS = 10;
+const SEARCHABLE_QUOTE_TYPES = new Set(['EQUITY', 'ETF']);
 
 interface CacheEntry {
   price: Prisma.Decimal;
@@ -32,27 +43,34 @@ export interface TickerSearchResult {
   instrumentType: string;
 }
 
-interface TwelveDataSearchEntry {
+interface YahooSearchQuote {
   symbol: string;
-  mic_code: string;
-  instrument_name?: string;
-  exchange?: string;
-  country?: string;
-  currency?: string;
-  instrument_type?: string;
+  quoteType: string;
+  shortname?: string;
+  longname?: string;
+  exchDisp?: string;
 }
 
-function isTwelveDataSearchEntry(
-  value: unknown,
-): value is TwelveDataSearchEntry {
+function isYahooSearchQuote(value: unknown): value is YahooSearchQuote {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
   return (
-    typeof record.symbol === 'string' && typeof record.mic_code === 'string'
+    typeof record.symbol === 'string' && typeof record.quoteType === 'string'
   );
 }
 
-// A cache key combines ticker + exchange mic_code, not the bare ticker —
+// Yahoo's symbol is a single string combining ticker + exchange suffix
+// (e.g. "DSN.F" for Danske Bank on Frankfurt, plain "AAPL" for Nasdaq).
+// The suffix is exactly what's needed to query the right instrument, but
+// showing it as the position's ticker would be ugly ("DSN.F" instead of
+// "DSN") — split it so the clean part is stored as ticker and the full
+// Yahoo symbol is stored as the disambiguating "micCode".
+function splitYahooSymbol(symbol: string): string {
+  const dotIndex = symbol.indexOf('.');
+  return dotIndex === -1 ? symbol : symbol.slice(0, dotIndex);
+}
+
+// A cache key combines ticker + exchange qualifier, not the bare ticker —
 // the same ticker string can mean entirely different companies on
 // different exchanges (e.g. "DSN" is Danske Bank in Germany, an
 // Indonesian palm oil company, and a US OTC stock), so caching by ticker
@@ -146,47 +164,47 @@ export class MarketPricesService {
     return new Map(results);
   }
 
-  /** Proxies Twelve Data's symbol search so the API key never reaches the frontend. */
   async searchSymbols(query: string): Promise<TickerSearchResult[]> {
-    const apiKey = process.env.TWELVE_DATA_API_KEY;
-    if (!apiKey || !apiKey.trim() || !query.trim()) {
+    const trimmed = query.trim();
+    if (!trimmed) {
       return [];
     }
 
     try {
-      const url = `${TWELVE_DATA_SEARCH_URL}?symbol=${encodeURIComponent(query.trim())}&apikey=${apiKey.trim()}`;
-      const response = await fetch(url);
+      const url = `${YAHOO_SEARCH_URL}?q=${encodeURIComponent(trimmed)}&quotesCount=${MAX_SEARCH_RESULTS}&newsCount=0`;
+      const response = await fetch(url, { headers: YAHOO_HEADERS });
       if (!response.ok) {
         this.logger.warn(
-          `Twelve Data symbol search for "${query}" failed with status ${response.status}`,
+          `Yahoo Finance symbol search for "${query}" failed with status ${response.status}`,
         );
         return [];
       }
 
       const body: unknown = await response.json();
-      const data =
+      const quotes =
         typeof body === 'object' &&
         body !== null &&
-        'data' in body &&
-        Array.isArray(body.data)
-          ? (body as { data: unknown[] }).data
+        'quotes' in body &&
+        Array.isArray(body.quotes)
+          ? (body as { quotes: unknown[] }).quotes
           : [];
 
-      return data
-        .filter(isTwelveDataSearchEntry)
+      return quotes
+        .filter(isYahooSearchQuote)
+        .filter((quote) => SEARCHABLE_QUOTE_TYPES.has(quote.quoteType))
         .slice(0, MAX_SEARCH_RESULTS)
-        .map((entry) => ({
-          symbol: entry.symbol,
-          name: entry.instrument_name ?? entry.symbol,
-          exchange: entry.exchange ?? '',
-          micCode: entry.mic_code,
-          country: entry.country ?? '',
-          currency: entry.currency ?? '',
-          instrumentType: entry.instrument_type ?? '',
+        .map((quote) => ({
+          symbol: splitYahooSymbol(quote.symbol),
+          name: quote.shortname ?? quote.longname ?? quote.symbol,
+          exchange: quote.exchDisp ?? '',
+          micCode: quote.symbol,
+          country: '',
+          currency: '',
+          instrumentType: quote.quoteType,
         }));
     } catch (error) {
       this.logger.warn(
-        `Twelve Data symbol search for "${query}" threw an error: ${error instanceof Error ? error.message : String(error)}`,
+        `Yahoo Finance symbol search for "${query}" threw an error: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
     }
@@ -196,36 +214,24 @@ export class MarketPricesService {
     ticker: string,
     micCode?: string | null,
   ): Promise<Prisma.Decimal | null> {
-    const apiKey = process.env.TWELVE_DATA_API_KEY;
-    if (!apiKey || !apiKey.trim()) {
-      this.logger.warn(
-        'TWELVE_DATA_API_KEY is not set — market prices are unavailable',
-      );
-      return null;
-    }
+    const querySymbol = micCode?.trim() || ticker;
 
     try {
-      const micCodeParam = micCode
-        ? `&mic_code=${encodeURIComponent(micCode)}`
-        : '';
-      const url = `${TWELVE_DATA_PRICE_URL}?symbol=${encodeURIComponent(ticker)}${micCodeParam}&apikey=${apiKey.trim()}`;
-      const response = await fetch(url);
+      const url = `${YAHOO_CHART_URL}/${encodeURIComponent(querySymbol)}`;
+      const response = await fetch(url, { headers: YAHOO_HEADERS });
       if (!response.ok) {
         this.logger.warn(
-          `Twelve Data request for ${ticker} failed with status ${response.status}`,
+          `Yahoo Finance request for ${querySymbol} failed with status ${response.status}`,
         );
         return null;
       }
 
       const body: unknown = await response.json();
-      const price =
-        typeof body === 'object' && body !== null && 'price' in body
-          ? body.price
-          : undefined;
+      const price = this.extractRegularMarketPrice(body);
 
-      if (typeof price !== 'string' || price.trim() === '') {
+      if (price === null) {
         this.logger.warn(
-          `Twelve Data returned no usable price for ${ticker}: ${JSON.stringify(body)}`,
+          `Yahoo Finance returned no usable price for ${querySymbol}: ${JSON.stringify(body)}`,
         );
         return null;
       }
@@ -233,10 +239,38 @@ export class MarketPricesService {
       return new Prisma.Decimal(price);
     } catch (error) {
       this.logger.warn(
-        `Twelve Data request for ${ticker} threw an error: ${error instanceof Error ? error.message : String(error)}`,
+        `Yahoo Finance request for ${querySymbol} threw an error: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }
+  }
+
+  private extractRegularMarketPrice(body: unknown): number | null {
+    if (typeof body !== 'object' || body === null || !('chart' in body)) {
+      return null;
+    }
+    const chart = body.chart;
+    if (typeof chart !== 'object' || chart === null || !('result' in chart)) {
+      return null;
+    }
+    const result = chart.result;
+    if (!Array.isArray(result) || result.length === 0) {
+      return null;
+    }
+    const first: unknown = result[0];
+    if (typeof first !== 'object' || first === null || !('meta' in first)) {
+      return null;
+    }
+    const meta = first.meta;
+    if (
+      typeof meta !== 'object' ||
+      meta === null ||
+      !('regularMarketPrice' in meta)
+    ) {
+      return null;
+    }
+    const price = meta.regularMarketPrice;
+    return typeof price === 'number' && Number.isFinite(price) ? price : null;
   }
 
   private async persistPrice(

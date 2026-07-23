@@ -13,6 +13,12 @@ interface TickerAutocompleteProps {
 
 const DEBOUNCE_MS = 300;
 
+function describeMatch(result: TickerSearchResult, separator: string): string {
+  return [result.exchange, result.country, result.currency]
+    .filter(Boolean)
+    .join(separator);
+}
+
 export default function TickerAutocomplete({
   ticker,
   micCode,
@@ -120,7 +126,7 @@ export default function TickerAutocomplete({
                     <span className="ml-2 font-normal text-ink-muted">{result.name}</span>
                   </span>
                   <span className="text-xs text-ink-faint">
-                    {result.exchange || result.micCode} · {result.country} · {result.currency}
+                    {describeMatch(result, ' · ') || result.micCode}
                   </span>
                 </button>
               ))}
@@ -130,7 +136,7 @@ export default function TickerAutocomplete({
 
       <p className="mt-1 text-xs text-ink-faint">
         {selectedMatch
-          ? `Matched: ${selectedMatch.exchange || selectedMatch.micCode}, ${selectedMatch.country} (${selectedMatch.currency})`
+          ? `Matched: ${describeMatch(selectedMatch, ', ') || selectedMatch.micCode}`
           : 'Pick a match for accurate live pricing, or type freely.'}
       </p>
     </div>
