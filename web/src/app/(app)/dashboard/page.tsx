@@ -13,6 +13,7 @@ import {
   CurrencyPnlCard,
   PositionCountsSummary,
   DashboardEmptyState,
+  ToggleSwitch,
 } from '@features/dashboard/components';
 
 export default function DashboardPage() {
@@ -23,6 +24,7 @@ export default function DashboardPage() {
     isError: isPnlError,
   } = usePortfolioPnlQuery();
   const [includeDividends, setIncludeDividends] = useState(false);
+  const [includeClosedPositions, setIncludeClosedPositions] = useState(false);
   const hasNoPositions =
     !!summary &&
     summary.positionCounts.open === 0 &&
@@ -56,19 +58,22 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="mb-3 mt-8 flex items-center justify-between">
+          <div className="mb-4 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-line-soft bg-surface-soft px-4 py-3">
             <h2 className="text-sm font-semibold uppercase text-ink-faint">
               Live P&amp;L
             </h2>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
-              <input
-                type="checkbox"
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <ToggleSwitch
+                label="Include dividends"
                 checked={includeDividends}
-                onChange={(event) => setIncludeDividends(event.target.checked)}
-                className="h-4 w-4 accent-brand-accent"
+                onChange={setIncludeDividends}
               />
-              Include dividends
-            </label>
+              <ToggleSwitch
+                label="Include closed positions"
+                checked={includeClosedPositions}
+                onChange={setIncludeClosedPositions}
+              />
+            </div>
           </div>
           {isPnlLoading && <PageLoader />}
           {isPnlError && (
@@ -76,7 +81,7 @@ export default function DashboardPage() {
           )}
           {pnl &&
             (pnl.currencies.length === 0 ? (
-              <p className="text-ink-muted">No open positions to price right now.</p>
+              <p className="text-ink-muted">No positions to show right now.</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {pnl.currencies.map((currency) => (
@@ -84,6 +89,7 @@ export default function DashboardPage() {
                     key={currency.currency}
                     summary={currency}
                     includeDividends={includeDividends}
+                    includeClosedPositions={includeClosedPositions}
                   />
                 ))}
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
@@ -10,13 +10,26 @@ import { APP_ROUTES } from '@shared/constants';
 import { usePositionsQuery, useDeletePositionWithConfirmation } from '@features/positions/list/hooks';
 import { PositionsTable, PositionsFilter } from '@features/positions/list/components';
 import type { PositionStatus } from '@features/positions/services';
+import { usePortfolioPnlQuery } from '@features/dashboard/hooks';
+import type { PositionPnl } from '@features/dashboard/services';
 
 export default function PositionsPage() {
   const [statusFilter, setStatusFilter] = useState<PositionStatus | undefined>(undefined);
   const { data: positions, isLoading, isError } = usePositionsQuery(
     statusFilter ? { status: statusFilter } : undefined,
   );
+  const { data: pnl } = usePortfolioPnlQuery();
   const { handleDelete, isDeleting } = useDeletePositionWithConfirmation();
+
+  const pnlByPositionId = useMemo(() => {
+    const map = new Map<string, PositionPnl>();
+    for (const currency of pnl?.currencies ?? []) {
+      for (const position of currency.positions) {
+        map.set(position.positionId, position);
+      }
+    }
+    return map;
+  }, [pnl]);
 
   return (
     <>
@@ -37,6 +50,7 @@ export default function PositionsPage() {
       {!isLoading && !isError && (
         <PositionsTable
           positions={positions ?? []}
+          pnlByPositionId={pnlByPositionId}
           onDelete={handleDelete}
           isDeleting={isDeleting}
         />

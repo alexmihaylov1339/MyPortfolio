@@ -20,6 +20,7 @@ export interface ValidatedPositionInput {
   status: PositionStatus;
   openedAt?: Date;
   closedAt?: Date;
+  closePrice?: string;
 }
 
 export interface ValidatedPositionUpdateInput {
@@ -34,6 +35,7 @@ export interface ValidatedPositionUpdateInput {
   status?: PositionStatus;
   openedAt?: Date;
   closedAt?: Date | null;
+  closePrice?: string | null;
 }
 
 export interface ValidatedPositionListQuery {
@@ -119,6 +121,15 @@ export function validateCreatePositionInput(
     );
   }
 
+  if (
+    status === PositionStatus.CLOSED &&
+    !isPositiveDecimalString(body.closePrice)
+  ) {
+    throw new BadRequestException(
+      POSITION_ERROR_MESSAGES.closePriceRequiredWhenClosed,
+    );
+  }
+
   return {
     broker: body.broker,
     ticker: body.ticker.trim().toUpperCase(),
@@ -133,6 +144,8 @@ export function validateCreatePositionInput(
       ? parseDate(body.openedAt, POSITION_ERROR_MESSAGES.openedAtInvalid)
       : undefined,
     closedAt,
+    closePrice:
+      status === PositionStatus.CLOSED ? body.closePrice?.trim() : undefined,
   };
 }
 
@@ -214,9 +227,27 @@ export function validateUpdatePositionInput(
       : null;
   }
 
+  if (!isUndefined(body.closePrice)) {
+    if (body.closePrice && !isPositiveDecimalString(body.closePrice)) {
+      throw new BadRequestException(
+        POSITION_ERROR_MESSAGES.closePriceRequiredWhenClosed,
+      );
+    }
+    result.closePrice = body.closePrice?.trim() || null;
+  }
+
   if (result.status === PositionStatus.CLOSED && !result.closedAt) {
     throw new BadRequestException(
       POSITION_ERROR_MESSAGES.closedAtRequiredWhenClosed,
+    );
+  }
+
+  if (
+    result.status === PositionStatus.CLOSED &&
+    !isPositiveDecimalString(result.closePrice)
+  ) {
+    throw new BadRequestException(
+      POSITION_ERROR_MESSAGES.closePriceRequiredWhenClosed,
     );
   }
 

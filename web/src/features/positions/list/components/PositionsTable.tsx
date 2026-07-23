@@ -5,11 +5,13 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { APP_ROUTES } from '@shared/constants';
+import type { PositionPnl } from '@features/dashboard/services';
 
 import type { Position } from '../../services';
 
 interface PositionsTableProps {
   positions: Position[];
+  pnlByPositionId?: Map<string, PositionPnl>;
   onDelete: (position: Position) => void;
   isDeleting?: boolean;
 }
@@ -34,6 +36,7 @@ function comparePositions(a: Position, b: Position, field: SortField): number {
 
 export default function PositionsTable({
   positions,
+  pnlByPositionId,
   onDelete,
   isDeleting,
 }: PositionsTableProps) {
@@ -72,39 +75,58 @@ export default function PositionsTable({
               {sortField === column.field ? (sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
             </th>
           ))}
+          <th className="py-2 pr-4 font-semibold text-ink-strong">Current price</th>
+          <th className="py-2 pr-4 font-semibold text-ink-strong">Current value</th>
           <th className="py-2 pr-4 font-semibold text-ink-strong">Status</th>
           <th className="py-2 font-semibold text-ink-strong">Actions</th>
         </tr>
       </thead>
       <tbody>
-        {sortedPositions.map((position) => (
-          <tr key={position.id} className="border-b border-line-soft">
-            <td className="py-2 pr-4">{position.ticker}</td>
-            <td className="py-2 pr-4">{position.broker}</td>
-            <td className="py-2 pr-4">{position.quantity}</td>
-            <td className="py-2 pr-4">
-              {position.averageBuyPrice} {position.currency}
-            </td>
-            <td className="py-2 pr-4">{position.openedAt.slice(0, 10)}</td>
-            <td className="py-2 pr-4">{position.status}</td>
-            <td className="py-2">
-              <Link
-                href={APP_ROUTES.positionEdit(position.id)}
-                className="mr-3 text-brand hover:underline"
-              >
-                Edit
-              </Link>
-              <button
-                type="button"
-                onClick={() => onDelete(position)}
-                disabled={isDeleting}
-                className="cursor-pointer text-destructive-text hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
+        {sortedPositions.map((position) => {
+          const pnl = pnlByPositionId?.get(position.id);
+          return (
+            <tr key={position.id} className="border-b border-line-soft">
+              <td className="py-2 pr-4">{position.ticker}</td>
+              <td className="py-2 pr-4">{position.broker}</td>
+              <td className="py-2 pr-4">{position.quantity}</td>
+              <td className="py-2 pr-4">
+                {position.averageBuyPrice} {position.currency}
+              </td>
+              <td className="py-2 pr-4">{position.openedAt.slice(0, 10)}</td>
+              <td className="py-2 pr-4">
+                {pnl?.currentPrice ? (
+                  `${pnl.currentPrice} ${position.currency}`
+                ) : (
+                  <span className="text-ink-faint">Unavailable</span>
+                )}
+              </td>
+              <td className="py-2 pr-4">
+                {pnl?.currentValue ? (
+                  `${pnl.currentValue} ${position.currency}`
+                ) : (
+                  <span className="text-ink-faint">Unavailable</span>
+                )}
+              </td>
+              <td className="py-2 pr-4">{position.status}</td>
+              <td className="py-2">
+                <Link
+                  href={APP_ROUTES.positionEdit(position.id)}
+                  className="mr-3 text-brand hover:underline"
+                >
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => onDelete(position)}
+                  disabled={isDeleting}
+                  className="cursor-pointer text-destructive-text hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

@@ -39,6 +39,7 @@ export function getPositionsSummary(): Promise<PositionsSummary> {
 export interface PositionPnl {
   positionId: string;
   ticker: string;
+  status: 'OPEN' | 'CLOSED';
   quantity: string;
   averageBuyPrice: string;
   currentPrice: string | null;
@@ -56,6 +57,8 @@ export interface CurrencyPnlSummary {
   totalUnrealizedPnl: string;
   totalDividends: string;
   totalReturnPnl: string;
+  totalPnlAllPositions: string;
+  totalReturnPnlAllPositions: string;
   positions: PositionPnl[];
 }
 

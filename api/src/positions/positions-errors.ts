@@ -6,6 +6,8 @@ export const POSITION_ERROR_MESSAGES = {
   averageBuyPriceInvalid: 'Average buy price must be a positive number',
   statusInvalid: 'Status must be one of: OPEN, CLOSED',
   closedAtRequiredWhenClosed: 'Closed date is required when status is CLOSED',
+  closePriceRequiredWhenClosed:
+    'Close price must be a positive number when status is CLOSED',
   openedAtInvalid: 'Opened date is invalid',
   closedAtInvalid: 'Closed date is invalid',
   updateRequiresField: 'At least one field is required',

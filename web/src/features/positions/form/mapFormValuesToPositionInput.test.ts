@@ -46,6 +46,39 @@ describe('mapFormValuesToPositionInput', () => {
     expect(result.exchangeMicCode).toBeUndefined();
   });
 
+  it('omits closePrice as undefined (not the string "undefined") for an open position where the field is never rendered', () => {
+    // closePrice only renders as a form field when status is CLOSED, so
+    // values.closePrice is genuinely `undefined` here, not an empty string.
+    // A naive `String(values.closePrice)` would have produced the literal
+    // string "undefined" and sent it to the API as if it were real data.
+    const values = {
+      broker: 'REVOLUT',
+      ticker: 'AAPL',
+      quantity: '1',
+      averageBuyPrice: '100',
+    };
+
+    const result = mapFormValuesToPositionInput(values);
+
+    expect(result.closePrice).toBeUndefined();
+  });
+
+  it('coerces closePrice to a string when present, same NumberField quirk as quantity/averageBuyPrice', () => {
+    const values = {
+      broker: 'REVOLUT',
+      ticker: 'AAPL',
+      quantity: '1',
+      averageBuyPrice: '100',
+      status: 'CLOSED',
+      closePrice: 120.5 as unknown as string,
+    };
+
+    const result = mapFormValuesToPositionInput(values);
+
+    expect(result.closePrice).toBe('120.5');
+    expect(typeof result.closePrice).toBe('string');
+  });
+
   it('passes through a selected exchangeMicCode', () => {
     // Set when the user picks a match from the ticker search results,
     // rather than typing free text — disambiguates tickers that collide

@@ -10,4 +10,5 @@ export interface UpdatePositionDto {
   status?: string;
   openedAt?: string;
   closedAt?: string | null;
+  closePrice?: string | null;
 }

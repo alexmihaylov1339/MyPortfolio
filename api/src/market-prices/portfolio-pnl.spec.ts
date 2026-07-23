@@ -18,6 +18,7 @@ function buildPosition(overrides: Partial<Position> = {}): Position {
     status: PositionStatus.OPEN,
     openedAt: new Date('2026-01-01'),
     closedAt: null,
+    closePrice: null,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
     ...overrides,
@@ -25,7 +26,7 @@ function buildPosition(overrides: Partial<Position> = {}): Position {
 }
 
 describe('calculatePortfolioPnl', () => {
-  it('returns an empty currencies array for zero open positions', () => {
+  it('returns an empty currencies array for zero positions', () => {
     const result = calculatePortfolioPnl([], new Map());
 
     expect(result).toEqual({ currencies: [] });
@@ -47,10 +48,13 @@ describe('calculatePortfolioPnl', () => {
         totalUnrealizedPnl: '500.00',
         totalDividends: '0.00',
         totalReturnPnl: '500.00',
+        totalPnlAllPositions: '500.00',
+        totalReturnPnlAllPositions: '500.00',
         positions: [
           {
             positionId: 'position-id',
             ticker: 'AAPL',
+            status: 'OPEN',
             quantity: '10',
             averageBuyPrice: '100',
             currentPrice: '150.00',
@@ -164,19 +168,6 @@ describe('calculatePortfolioPnl', () => {
     ).toBe('840.00');
   });
 
-  it('excludes closed positions entirely, even when a price is available', () => {
-    const closedPosition = buildPosition({
-      status: PositionStatus.CLOSED,
-      quantity: new Prisma.Decimal('10'),
-      averageBuyPrice: new Prisma.Decimal('100'),
-    });
-    const prices = new Map([['AAPL', new Prisma.Decimal('150')]]);
-
-    const result = calculatePortfolioPnl([closedPosition], prices);
-
-    expect(result.currencies).toEqual([]);
-  });
-
   describe('dividends (total return)', () => {
     it('adds dividends on top of unrealized P&L when a price is available', () => {
       const position = buildPosition({
@@ -200,10 +191,6 @@ describe('calculatePortfolioPnl', () => {
     });
 
     it('still reports totalDividends when the price is unavailable, but totalReturnPnl stays null', () => {
-      // Dividends are known independent of pricing — showing them is honest.
-      // A combined dollar "total return" figure isn't, since it needs a
-      // current value we don't have (same "never fake it" rule as
-      // unrealizedPnl itself).
       const position = buildPosition();
       const dividendTotals = new Map([
         ['position-id', new Prisma.Decimal('25')],
@@ -286,11 +273,114 @@ describe('calculatePortfolioPnl', () => {
         dividendTotals,
       );
 
-      // 500 unrealized + 20 dividends for AAPL only — MSFT's 5 in dividends
-      // is reflected in totalDividends but not in totalReturnPnl since it
-      // has no price to base a total on.
       expect(result.currencies[0].totalReturnPnl).toBe('520.00');
       expect(result.currencies[0].totalDividends).toBe('25.00');
+    });
+  });
+
+  describe('closed positions', () => {
+    it('computes realized P&L for a closed position from its recorded closePrice, not a live price', () => {
+      const closed = buildPosition({
+        status: PositionStatus.CLOSED,
+        quantity: new Prisma.Decimal('10'),
+        averageBuyPrice: new Prisma.Decimal('100'),
+        closePrice: new Prisma.Decimal('180'),
+      });
+      // A live price map entry is deliberately present and different, to
+      // prove closed positions ignore it and use closePrice instead.
+      const prices = new Map([['AAPL', new Prisma.Decimal('999')]]);
+
+      const result = calculatePortfolioPnl([closed], prices);
+
+      expect(result.currencies[0].positions[0]).toMatchObject({
+        status: 'CLOSED',
+        currentPrice: '180.00',
+        unrealizedPnl: '800.00',
+        unrealizedPnlPercent: '80.00',
+      });
+    });
+
+    it('shows a closed position as price-unavailable when it has no recorded closePrice (closed before the field existed)', () => {
+      const closed = buildPosition({
+        status: PositionStatus.CLOSED,
+        closePrice: null,
+      });
+
+      const result = calculatePortfolioPnl([closed], new Map());
+
+      expect(result.currencies[0].positions[0]).toMatchObject({
+        status: 'CLOSED',
+        currentPrice: null,
+        unrealizedPnl: null,
+      });
+    });
+
+    it('excludes closed positions from the open-only totals (totalCurrentValue, totalUnrealizedPnl, totalReturnPnl)', () => {
+      const open = buildPosition({
+        id: '1',
+        quantity: new Prisma.Decimal('10'),
+        averageBuyPrice: new Prisma.Decimal('100'),
+      });
+      const closed = buildPosition({
+        id: '2',
+        ticker: 'TSLA',
+        status: PositionStatus.CLOSED,
+        quantity: new Prisma.Decimal('5'),
+        averageBuyPrice: new Prisma.Decimal('200'),
+        closePrice: new Prisma.Decimal('300'),
+      });
+      const prices = new Map([['AAPL', new Prisma.Decimal('150')]]);
+
+      const result = calculatePortfolioPnl([open, closed], prices);
+
+      const [usd] = result.currencies;
+      expect(usd.totalCurrentValue).toBe('1500.00'); // open only
+      expect(usd.totalUnrealizedPnl).toBe('500.00'); // open only
+      expect(usd.totalReturnPnl).toBe('500.00'); // open only
+      expect(usd.positions.map((p) => p.status)).toEqual(['OPEN', 'CLOSED']);
+    });
+
+    it('includes closed positions in totalPnlAllPositions and totalReturnPnlAllPositions', () => {
+      const open = buildPosition({
+        id: '1',
+        quantity: new Prisma.Decimal('10'),
+        averageBuyPrice: new Prisma.Decimal('100'),
+      });
+      const closed = buildPosition({
+        id: '2',
+        ticker: 'TSLA',
+        status: PositionStatus.CLOSED,
+        quantity: new Prisma.Decimal('5'),
+        averageBuyPrice: new Prisma.Decimal('200'),
+        closePrice: new Prisma.Decimal('300'),
+      });
+      const prices = new Map([['AAPL', new Prisma.Decimal('150')]]);
+      const dividendTotals = new Map([['2', new Prisma.Decimal('10')]]);
+
+      const result = calculatePortfolioPnl(
+        [open, closed],
+        prices,
+        dividendTotals,
+      );
+
+      const [usd] = result.currencies;
+      // open unrealized 500 + closed realized 500 = 1000
+      expect(usd.totalPnlAllPositions).toBe('1000.00');
+      // + 10 dividends from the closed position (open position has none)
+      expect(usd.totalReturnPnlAllPositions).toBe('1010.00');
+      // totalDividends always includes every position regardless of status
+      expect(usd.totalDividends).toBe('10.00');
+    });
+
+    it('excludes an unpriced closed position from totalPnlAllPositions, same "never fake it" rule as open positions', () => {
+      const closedWithoutPrice = buildPosition({
+        status: PositionStatus.CLOSED,
+        closePrice: null,
+      });
+
+      const result = calculatePortfolioPnl([closedWithoutPrice], new Map());
+
+      expect(result.currencies[0].totalPnlAllPositions).toBe('0.00');
     });
   });
 });

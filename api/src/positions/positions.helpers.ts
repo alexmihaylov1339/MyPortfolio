@@ -13,6 +13,7 @@ export interface PositionResponse {
   status: string;
   openedAt: string;
   closedAt?: string;
+  closePrice?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +32,9 @@ export function toPositionResponse(position: Position): PositionResponse {
     status: position.status,
     openedAt: position.openedAt.toISOString(),
     closedAt: position.closedAt ? position.closedAt.toISOString() : undefined,
+    closePrice: position.closePrice
+      ? position.closePrice.toString()
+      : undefined,
     createdAt: position.createdAt.toISOString(),
     updatedAt: position.updatedAt.toISOString(),
   };

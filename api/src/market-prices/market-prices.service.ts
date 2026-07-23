@@ -87,12 +87,18 @@ export class MarketPricesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPortfolioPnlForUser(userId: string): Promise<PortfolioPnlResponse> {
+    // Both statuses are fetched — CLOSED positions still need their
+    // dividends and their own closePrice-based P&L, they just don't need
+    // a live market price (see calculatePortfolioPnl for how each is priced).
     const positions = await this.prisma.position.findMany({
-      where: { userId, status: PositionStatus.OPEN },
+      where: { userId },
     });
 
+    const openPositions = positions.filter(
+      (position) => position.status === PositionStatus.OPEN,
+    );
     const prices = await this.getPrices(
-      positions.map((position) => ({
+      openPositions.map((position) => ({
         ticker: position.ticker,
         micCode: position.exchangeMicCode,
       })),

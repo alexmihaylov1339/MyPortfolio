@@ -11,4 +11,5 @@ export interface CreatePositionDto {
   status?: string;
   openedAt?: string;
   closedAt?: string;
+  closePrice?: string;
 }

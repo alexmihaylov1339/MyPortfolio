@@ -74,13 +74,23 @@ export function usePositionFormFields(status: PositionStatus): FieldConfig[] {
   ];
 
   if (status === 'CLOSED') {
-    fields.push({
-      type: 'date',
-      name: 'closedAt',
-      label: 'Closed date',
-      required: true,
-      defaultValue: todayAsDateInputValue(),
-    });
+    fields.push(
+      {
+        type: 'date',
+        name: 'closedAt',
+        label: 'Closed date',
+        required: true,
+        defaultValue: todayAsDateInputValue(),
+      },
+      {
+        type: 'number',
+        name: 'closePrice',
+        label: 'Close price (per share)',
+        required: true,
+        min: 0,
+        step: 0.01,
+      },
+    );
   }
 
   return fields;

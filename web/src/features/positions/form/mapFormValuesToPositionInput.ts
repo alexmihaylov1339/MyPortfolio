@@ -18,5 +18,12 @@ export function mapFormValuesToPositionInput(
     status: (values.status as PositionStatus) || undefined,
     openedAt: values.openedAt || undefined,
     closedAt: values.closedAt || undefined,
+    // closePrice is only rendered (and only present in `values`) when
+    // status is CLOSED — String(undefined) would otherwise produce the
+    // literal string "undefined", so this must stay a guarded coercion.
+    closePrice:
+      values.closePrice !== undefined && values.closePrice !== ''
+        ? String(values.closePrice)
+        : undefined,
   };
 }

@@ -22,6 +22,7 @@ export interface Position {
   status: PositionStatus;
   openedAt: string;
   closedAt?: string;
+  closePrice?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,10 +39,12 @@ export type CreatePositionInput = {
   status?: PositionStatus;
   openedAt?: string;
   closedAt?: string;
+  closePrice?: string;
 };
 
 export type UpdatePositionInput = Partial<CreatePositionInput> & {
   closedAt?: string | null;
+  closePrice?: string | null;
 };
 
 export type ListPositionsFilter = {

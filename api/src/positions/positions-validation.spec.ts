@@ -45,19 +45,35 @@ describe('validateCreatePositionInput', () => {
 
   it('requires closedAt when status is CLOSED', () => {
     expect(() =>
-      validateCreatePositionInput({ ...validBody, status: 'CLOSED' }),
+      validateCreatePositionInput({
+        ...validBody,
+        status: 'CLOSED',
+        closePrice: '160',
+      }),
     ).toThrow(BadRequestException);
   });
 
-  it('accepts CLOSED status when closedAt is provided', () => {
+  it('requires closePrice when status is CLOSED', () => {
+    expect(() =>
+      validateCreatePositionInput({
+        ...validBody,
+        status: 'CLOSED',
+        closedAt: '2026-07-01',
+      }),
+    ).toThrow(BadRequestException);
+  });
+
+  it('accepts CLOSED status when closedAt and closePrice are both provided', () => {
     const result = validateCreatePositionInput({
       ...validBody,
       status: 'CLOSED',
       closedAt: '2026-07-01',
+      closePrice: '160',
     });
 
     expect(result.status).toBe('CLOSED');
     expect(result.closedAt).toEqual(new Date('2026-07-01'));
+    expect(result.closePrice).toBe('160');
   });
 });
 
@@ -67,19 +83,27 @@ describe('validateUpdatePositionInput', () => {
   });
 
   it('requires closedAt when status is set to CLOSED in the same request', () => {
-    expect(() => validateUpdatePositionInput({ status: 'CLOSED' })).toThrow(
-      BadRequestException,
-    );
+    expect(() =>
+      validateUpdatePositionInput({ status: 'CLOSED', closePrice: '160' }),
+    ).toThrow(BadRequestException);
   });
 
-  it('accepts status CLOSED when closedAt is included in the same request', () => {
+  it('requires closePrice when status is set to CLOSED in the same request', () => {
+    expect(() =>
+      validateUpdatePositionInput({ status: 'CLOSED', closedAt: '2026-07-01' }),
+    ).toThrow(BadRequestException);
+  });
+
+  it('accepts status CLOSED when closedAt and closePrice are both included', () => {
     const result = validateUpdatePositionInput({
       status: 'CLOSED',
       closedAt: '2026-07-01',
+      closePrice: '160',
     });
 
     expect(result.status).toBe('CLOSED');
     expect(result.closedAt).toEqual(new Date('2026-07-01'));
+    expect(result.closePrice).toBe('160');
   });
 
   it('accepts a partial update with only quantity', () => {

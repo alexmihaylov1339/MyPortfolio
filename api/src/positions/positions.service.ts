@@ -60,6 +60,7 @@ export class PositionsService {
         status: input.status,
         ...(input.openedAt ? { openedAt: input.openedAt } : {}),
         closedAt: input.closedAt,
+        closePrice: input.closePrice,
       },
     });
 

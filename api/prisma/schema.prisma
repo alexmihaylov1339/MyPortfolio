@@ -56,6 +56,8 @@ model Position {
   status          PositionStatus @default(OPEN)
   openedAt        DateTime       @default(now())
   closedAt        DateTime?
+  /** Sale price recorded when the position is closed — required to compute realized P&L; a position closed before this field existed has none and shows as price-unavailable rather than a guessed figure. */
+  closePrice      Decimal?
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt

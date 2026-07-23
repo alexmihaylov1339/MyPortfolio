@@ -14,5 +14,6 @@ export function toPositionFormValues(position: Position): Record<string, string>
     status: position.status,
     openedAt: position.openedAt.slice(0, 10),
     closedAt: position.closedAt ? position.closedAt.slice(0, 10) : '',
+    closePrice: position.closePrice ?? '',
   };
 }

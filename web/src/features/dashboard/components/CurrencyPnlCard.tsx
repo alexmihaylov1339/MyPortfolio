@@ -3,6 +3,7 @@ import type { CurrencyPnlSummary } from '../services';
 interface CurrencyPnlCardProps {
   summary: CurrencyPnlSummary;
   includeDividends: boolean;
+  includeClosedPositions: boolean;
 }
 
 function pnlColorClass(value: string): string {
@@ -11,8 +12,22 @@ function pnlColorClass(value: string): string {
   return 'text-success-text';
 }
 
-export default function CurrencyPnlCard({ summary, includeDividends }: CurrencyPnlCardProps) {
-  const totalPnl = includeDividends ? summary.totalReturnPnl : summary.totalUnrealizedPnl;
+export default function CurrencyPnlCard({
+  summary,
+  includeDividends,
+  includeClosedPositions,
+}: CurrencyPnlCardProps) {
+  const totalPnl = includeClosedPositions
+    ? includeDividends
+      ? summary.totalReturnPnlAllPositions
+      : summary.totalPnlAllPositions
+    : includeDividends
+      ? summary.totalReturnPnl
+      : summary.totalUnrealizedPnl;
+
+  const visiblePositions = includeClosedPositions
+    ? summary.positions
+    : summary.positions.filter((position) => position.status === 'OPEN');
 
   return (
     <div className="rounded-[var(--radius-card)] border border-line-soft p-4 shadow-card">
@@ -33,27 +48,44 @@ export default function CurrencyPnlCard({ summary, includeDividends }: CurrencyP
         </div>
       </div>
 
-      <ul className="space-y-1 text-sm">
-        {summary.positions.map((position) => {
+      <ul className="space-y-2 text-sm">
+        {visiblePositions.map((position) => {
           const pnl = includeDividends ? position.totalReturnPnl : position.unrealizedPnl;
           const pnlPercent = includeDividends
             ? position.totalReturnPnlPercent
             : position.unrealizedPnlPercent;
 
           return (
-            <li key={position.positionId} className="flex justify-between">
-              <span>{position.ticker}</span>
-              {position.currentPrice === null ? (
-                <span className="text-ink-faint">
-                  {includeDividends && position.totalDividends !== '0.00'
-                    ? `Price unavailable · ${position.totalDividends} ${summary.currency} in dividends`
-                    : 'Price unavailable'}
-                </span>
-              ) : (
-                <span className={pnlColorClass(pnl ?? '0.00')}>
-                  {pnl} {summary.currency} ({pnlPercent}%)
-                </span>
-              )}
+            <li key={position.positionId} className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium text-ink-strong">{position.ticker}</span>
+                  {position.status === 'CLOSED' && (
+                    <span className="rounded-full bg-surface-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
+                      Closed
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-ink-faint">
+                  {position.quantity} sh
+                  {position.currentPrice
+                    ? ` @ ${position.currentPrice} ${summary.currency}`
+                    : ' · price unavailable'}
+                </div>
+              </div>
+              <div className="text-right">
+                {position.currentPrice === null ? (
+                  <span className="text-xs text-ink-faint">
+                    {includeDividends && position.totalDividends !== '0.00'
+                      ? `${position.totalDividends} ${summary.currency} in dividends`
+                      : 'Price unavailable'}
+                  </span>
+                ) : (
+                  <span className={pnlColorClass(pnl ?? '0.00')}>
+                    {pnl} {summary.currency} ({pnlPercent}%)
+                  </span>
+                )}
+              </div>
             </li>
           );
         })}

@@ -4,25 +4,36 @@ import type { Position } from '@prisma/client';
 export interface PositionPnl {
   positionId: string;
   ticker: string;
+  status: 'OPEN' | 'CLOSED';
   quantity: string;
   averageBuyPrice: string;
+  /** Live market price for an OPEN position, the recorded closePrice for a CLOSED one. */
   currentPrice: string | null;
   currentValue: string | null;
+  /** Unrealized P&L for OPEN positions, realized P&L (vs. closePrice) for CLOSED ones — see `status`. */
   unrealizedPnl: string | null;
   unrealizedPnlPercent: string | null;
   /** Sum of dividends ever recorded for this position — always known, independent of pricing. */
   totalDividends: string;
-  /** unrealizedPnl + totalDividends. Null whenever unrealizedPnl is null (no current price to base a total on). */
+  /** unrealizedPnl + totalDividends. Null whenever unrealizedPnl is null (no price to base a total on). */
   totalReturnPnl: string | null;
   totalReturnPnlPercent: string | null;
 }
 
 export interface CurrencyPnlSummary {
   currency: string;
+  /** What you currently own is worth — OPEN positions only, closed ones aren't held anymore. */
   totalCurrentValue: string;
+  /** OPEN positions only, price-based, no dividends — unchanged scope from before closed-position support. */
   totalUnrealizedPnl: string;
+  /** Every position regardless of status — dividends aren't price- or status-dependent. */
   totalDividends: string;
+  /** OPEN positions only: totalUnrealizedPnl + their own dividends. */
   totalReturnPnl: string;
+  /** OPEN (unrealized) + CLOSED (realized, via closePrice) positions combined, no dividends. */
+  totalPnlAllPositions: string;
+  /** Same as totalPnlAllPositions, plus dividends from every position (open and closed). */
+  totalReturnPnlAllPositions: string;
   positions: PositionPnl[];
 }
 
@@ -40,6 +51,7 @@ function calculatePositionPnl(
   const base = {
     positionId: position.id,
     ticker: position.ticker,
+    status: position.status,
     quantity: position.quantity.toString(),
     averageBuyPrice: position.averageBuyPrice.toString(),
     totalDividends: totalDividends.toFixed(2),
@@ -106,30 +118,46 @@ function isPriced(pnl: PositionPnl): pnl is PositionPnl & {
   );
 }
 
+function sumField(
+  pnls: (PositionPnl & {
+    currentValue: string;
+    unrealizedPnl: string;
+    totalReturnPnl: string;
+  })[],
+  field: 'currentValue' | 'unrealizedPnl' | 'totalReturnPnl',
+): Prisma.Decimal {
+  return pnls.reduce(
+    (sum, pnl) => sum.plus(new Prisma.Decimal(pnl[field])),
+    new Prisma.Decimal(0),
+  );
+}
+
 /**
- * Only OPEN positions are priced — closed positions have no "current"
- * value to speak of, and this app doesn't track a sale price, so realized
- * P&L can't be computed at all with the current data model.
+ * Both OPEN and CLOSED positions are included. An OPEN position is priced
+ * from the live `prices` map; a CLOSED one is priced from its own recorded
+ * `closePrice` (this app doesn't track a sale price for positions closed
+ * before that field existed, so those show as price-unavailable rather
+ * than a guessed figure — same "never fake it" rule as everywhere else).
  *
- * A position whose price is unavailable (no live fetch and no usable
- * cache) is excluded from its currency's totals, not treated as zero —
- * silently zeroing a real holding would misreport the portfolio's value.
+ * totalCurrentValue/totalUnrealizedPnl/totalReturnPnl stay OPEN-only (your
+ * current portfolio value and its P&L, unchanged scope from before closed
+ * positions were supported). totalPnlAllPositions/totalReturnPnlAllPositions
+ * add CLOSED positions' realized P&L on top, for a caller that wants a
+ * combined "how have I done overall, including what I've already sold"
+ * figure — the frontend's "include closed positions" toggle switches
+ * between these two total pairs, and between showing CLOSED positions in
+ * the per-currency `positions` list at all.
  *
  * dividendTotals is keyed by positionId (not ticker) since dividends are
- * recorded per-position, and is independent of pricing — a position with
- * an unavailable price still shows its dividends total, just not a
- * combined totalReturnPnl dollar figure (that requires knowing current
- * value, so it's null under the same "never fake it" rule as unrealizedPnl).
+ * recorded per-position, and totalDividends always sums every position
+ * regardless of status or pricing — dividends are neither.
  */
 export function calculatePortfolioPnl(
   positions: Position[],
   prices: Map<string, Prisma.Decimal | null>,
   dividendTotals: Map<string, Prisma.Decimal> = new Map(),
 ): PortfolioPnlResponse {
-  const openPositions = positions.filter(
-    (position) => position.status === PositionStatus.OPEN,
-  );
-  const byCurrency = groupPositionsByCurrency(openPositions);
+  const byCurrency = groupPositionsByCurrency(positions);
 
   const currencies = Array.from(byCurrency.entries())
     .sort(([a], [b]) => a.localeCompare(b))
@@ -137,27 +165,22 @@ export function calculatePortfolioPnl(
       const positionPnls = currencyPositions.map((position) =>
         calculatePositionPnl(
           position,
-          prices.get(position.ticker),
+          position.status === PositionStatus.OPEN
+            ? prices.get(position.ticker)
+            : position.closePrice,
           dividendTotals.get(position.id),
         ),
       );
 
-      const pricedPnls = positionPnls.filter(isPriced);
+      const openPriced = positionPnls.filter(
+        (pnl) => pnl.status === 'OPEN' && isPriced(pnl),
+      ) as (PositionPnl & {
+        currentValue: string;
+        unrealizedPnl: string;
+        totalReturnPnl: string;
+      })[];
+      const allPriced = positionPnls.filter(isPriced);
 
-      const totalCurrentValue = pricedPnls.reduce(
-        (sum, pnl) => sum.plus(new Prisma.Decimal(pnl.currentValue)),
-        new Prisma.Decimal(0),
-      );
-      const totalUnrealizedPnl = pricedPnls.reduce(
-        (sum, pnl) => sum.plus(new Prisma.Decimal(pnl.unrealizedPnl)),
-        new Prisma.Decimal(0),
-      );
-      const totalReturnPnl = pricedPnls.reduce(
-        (sum, pnl) => sum.plus(new Prisma.Decimal(pnl.totalReturnPnl)),
-        new Prisma.Decimal(0),
-      );
-      // Dividends are known independent of pricing, so this sums every
-      // position in the currency group, not just the priced ones.
       const totalDividends = positionPnls.reduce(
         (sum, pnl) => sum.plus(new Prisma.Decimal(pnl.totalDividends)),
         new Prisma.Decimal(0),
@@ -165,10 +188,15 @@ export function calculatePortfolioPnl(
 
       return {
         currency,
-        totalCurrentValue: totalCurrentValue.toFixed(2),
-        totalUnrealizedPnl: totalUnrealizedPnl.toFixed(2),
+        totalCurrentValue: sumField(openPriced, 'currentValue').toFixed(2),
+        totalUnrealizedPnl: sumField(openPriced, 'unrealizedPnl').toFixed(2),
         totalDividends: totalDividends.toFixed(2),
-        totalReturnPnl: totalReturnPnl.toFixed(2),
+        totalReturnPnl: sumField(openPriced, 'totalReturnPnl').toFixed(2),
+        totalPnlAllPositions: sumField(allPriced, 'unrealizedPnl').toFixed(2),
+        totalReturnPnlAllPositions: sumField(
+          allPriced,
+          'totalReturnPnl',
+        ).toFixed(2),
         positions: positionPnls,
       };
     });
