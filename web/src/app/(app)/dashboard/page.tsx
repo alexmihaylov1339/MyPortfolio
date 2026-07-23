@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { PageLoader, ErrorMessage } from '@shared/components';
 
@@ -14,6 +14,7 @@ import {
   PositionCountsSummary,
   DashboardEmptyState,
   ToggleSwitch,
+  type TickerPriceInfo,
 } from '@features/dashboard/components';
 
 export default function DashboardPage() {
@@ -29,6 +30,27 @@ export default function DashboardPage() {
     !!summary &&
     summary.positionCounts.open === 0 &&
     summary.positionCounts.closed === 0;
+
+  // The cost-basis summary (percent-of-portfolio breakdown) and the P&L
+  // endpoint (current price/quantity) are deliberately separate — cost
+  // basis stays correct even when pricing fails. Joined client-side here
+  // so the cost-basis card can still show current price/shares per ticker.
+  const tickerPriceInfoByCurrency = useMemo(() => {
+    const byCurrency = new Map<string, Map<string, TickerPriceInfo>>();
+    for (const currencyPnl of pnl?.currencies ?? []) {
+      const byTicker = new Map<string, TickerPriceInfo>();
+      for (const position of currencyPnl.positions) {
+        if (position.status !== 'OPEN') continue;
+        const existing = byTicker.get(position.ticker);
+        byTicker.set(position.ticker, {
+          quantity: (Number(existing?.quantity ?? 0) + Number(position.quantity)).toString(),
+          currentPrice: existing?.currentPrice ?? position.currentPrice,
+        });
+      }
+      byCurrency.set(currencyPnl.currency, byTicker);
+    }
+    return byCurrency;
+  }, [pnl]);
 
   return (
     <>
@@ -53,7 +75,11 @@ export default function DashboardPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {summary.currencies.map((currency) => (
-                <CurrencySummaryCard key={currency.currency} summary={currency} />
+                <CurrencySummaryCard
+                  key={currency.currency}
+                  summary={currency}
+                  tickerPriceInfo={tickerPriceInfoByCurrency.get(currency.currency)}
+                />
               ))}
             </div>
           )}

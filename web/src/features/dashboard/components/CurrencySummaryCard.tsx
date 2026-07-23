@@ -1,10 +1,16 @@
 import type { CurrencySummary } from '../services';
 
-interface CurrencySummaryCardProps {
-  summary: CurrencySummary;
+export interface TickerPriceInfo {
+  quantity: string;
+  currentPrice: string | null;
 }
 
-export default function CurrencySummaryCard({ summary }: CurrencySummaryCardProps) {
+interface CurrencySummaryCardProps {
+  summary: CurrencySummary;
+  tickerPriceInfo?: Map<string, TickerPriceInfo>;
+}
+
+export default function CurrencySummaryCard({ summary, tickerPriceInfo }: CurrencySummaryCardProps) {
   return (
     <div className="rounded-[var(--radius-card)] border border-line-soft p-4 shadow-card">
       <div className="mb-3 flex items-baseline justify-between">
@@ -19,13 +25,26 @@ export default function CurrencySummaryCard({ summary }: CurrencySummaryCardProp
           <h3 className="mb-1 text-xs font-medium uppercase text-ink-faint">
             By ticker
           </h3>
-          <ul className="space-y-1 text-sm">
-            {summary.byTicker.map((entry) => (
-              <li key={entry.ticker} className="flex justify-between">
-                <span>{entry.ticker}</span>
-                <span className="text-ink-muted">{entry.percent}%</span>
-              </li>
-            ))}
+          <ul className="space-y-1.5 text-sm">
+            {summary.byTicker.map((entry) => {
+              const priceInfo = tickerPriceInfo?.get(entry.ticker);
+              return (
+                <li key={entry.ticker} className="flex justify-between gap-2">
+                  <div>
+                    <div>{entry.ticker}</div>
+                    {priceInfo && (
+                      <div className="text-xs text-ink-faint">
+                        {priceInfo.quantity} sh
+                        {priceInfo.currentPrice
+                          ? ` @ ${priceInfo.currentPrice} ${summary.currency}`
+                          : ' · price unavailable'}
+                      </div>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-ink-muted">{entry.percent}%</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
         <div>
