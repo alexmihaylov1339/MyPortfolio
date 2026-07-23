@@ -1,3 +1,4 @@
+import { aggregatePositionsByTicker } from '../aggregatePositionsByTicker';
 import type { CurrencyPnlSummary } from '../services';
 
 interface CurrencyPnlCardProps {
@@ -29,6 +30,11 @@ export default function CurrencyPnlCard({
     ? summary.positions
     : summary.positions.filter((position) => position.status === 'OPEN');
 
+  // Same ticker held across multiple positions (e.g. two different
+  // brokers) is one holding, not several — merge them into a single row,
+  // consistent with the cost-basis card above, which already does this.
+  const rows = aggregatePositionsByTicker(visiblePositions);
+
   return (
     <div className="rounded-[var(--radius-card)] border border-line-soft p-4 shadow-card">
       <div className="mb-3 flex items-baseline justify-between">
@@ -49,35 +55,38 @@ export default function CurrencyPnlCard({
       </div>
 
       <ul className="space-y-2 text-sm">
-        {visiblePositions.map((position) => {
-          const pnl = includeDividends ? position.totalReturnPnl : position.unrealizedPnl;
+        {rows.map((row) => {
+          const pnl = includeDividends ? row.totalReturnPnl : row.unrealizedPnl;
           const pnlPercent = includeDividends
-            ? position.totalReturnPnlPercent
-            : position.unrealizedPnlPercent;
+            ? row.totalReturnPnlPercent
+            : row.unrealizedPnlPercent;
 
           return (
-            <li key={position.positionId} className="flex items-center justify-between gap-3">
+            <li key={`${row.ticker}-${row.status}`} className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-ink-strong">{position.ticker}</span>
-                  {position.status === 'CLOSED' && (
+                  <span className="font-medium text-ink-strong">{row.ticker}</span>
+                  {row.status === 'CLOSED' && (
                     <span className="rounded-full bg-surface-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
                       Closed
                     </span>
                   )}
+                  {row.lotCount > 1 && (
+                    <span className="text-[10px] text-ink-faint">({row.lotCount} lots)</span>
+                  )}
                 </div>
                 <div className="text-xs text-ink-faint">
-                  {position.quantity} sh
-                  {position.currentPrice
-                    ? ` @ ${position.currentPrice} ${summary.currency}`
+                  {row.quantity} sh
+                  {row.currentPrice
+                    ? ` @ ${row.currentPrice} ${summary.currency}`
                     : ' · price unavailable'}
                 </div>
               </div>
               <div className="text-right">
-                {position.currentPrice === null ? (
+                {row.currentPrice === null ? (
                   <span className="text-xs text-ink-faint">
-                    {includeDividends && position.totalDividends !== '0.00'
-                      ? `${position.totalDividends} ${summary.currency} in dividends`
+                    {includeDividends && row.totalDividends !== '0.00'
+                      ? `${row.totalDividends} ${summary.currency} in dividends`
                       : 'Price unavailable'}
                   </span>
                 ) : (
