@@ -97,8 +97,32 @@ export class MarketPricesService {
         micCode: position.exchangeMicCode,
       })),
     );
+    const dividendTotals = await this.getDividendTotals(
+      positions.map((position) => position.id),
+    );
 
-    return calculatePortfolioPnl(positions, prices);
+    return calculatePortfolioPnl(positions, prices, dividendTotals);
+  }
+
+  private async getDividendTotals(
+    positionIds: string[],
+  ): Promise<Map<string, Prisma.Decimal>> {
+    if (positionIds.length === 0) {
+      return new Map();
+    }
+
+    const sums = await this.prisma.dividend.groupBy({
+      by: ['positionId'],
+      where: { positionId: { in: positionIds } },
+      _sum: { amount: true },
+    });
+
+    return new Map(
+      sums.map((sum) => [
+        sum.positionId,
+        sum._sum.amount ?? new Prisma.Decimal(0),
+      ]),
+    );
   }
 
   async getPrice(

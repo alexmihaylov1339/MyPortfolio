@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 
 import { PageLoader, ErrorMessage } from '@shared/components';
 
-import { PositionForm } from '@features/positions/form/components';
+import { PositionForm, DividendsSection } from '@features/positions/form/components';
 import { usePositionQuery } from '@features/positions/form/hooks';
 import { toPositionFormValues } from '@features/positions/form/positionFormValues';
 
@@ -20,11 +20,14 @@ export default function EditPositionPage() {
         {isLoading && <PageLoader />}
         {isError && <ErrorMessage message="Could not load position." />}
         {position && (
-          <PositionForm
-            mode="edit"
-            positionId={position.id}
-            initialValues={toPositionFormValues(position)}
-          />
+          <>
+            <PositionForm
+              mode="edit"
+              positionId={position.id}
+              initialValues={toPositionFormValues(position)}
+            />
+            <DividendsSection positionId={position.id} currency={position.currency} />
+          </>
         )}
       </div>
     </>

@@ -12,3 +12,11 @@ export {
   type UpdatePositionInput,
   type ListPositionsFilter,
 } from './positions.service';
+
+export {
+  listDividends,
+  createDividend,
+  deleteDividend,
+  type Dividend,
+  type CreateDividendInput,
+} from './dividends.service';

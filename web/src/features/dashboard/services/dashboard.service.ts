@@ -45,12 +45,17 @@ export interface PositionPnl {
   currentValue: string | null;
   unrealizedPnl: string | null;
   unrealizedPnlPercent: string | null;
+  totalDividends: string;
+  totalReturnPnl: string | null;
+  totalReturnPnlPercent: string | null;
 }
 
 export interface CurrencyPnlSummary {
   currency: string;
   totalCurrentValue: string;
   totalUnrealizedPnl: string;
+  totalDividends: string;
+  totalReturnPnl: string;
   positions: PositionPnl[];
 }
 

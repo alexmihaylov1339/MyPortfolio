@@ -61,10 +61,24 @@ model Position {
   updatedAt       DateTime       @updatedAt
 
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dividends       Dividend[]
 
   @@index([userId])
   @@index([userId, status])
   @@index([userId, ticker])
+}
+
+/** A dividend payment received from a position, in that position's currency */
+model Dividend {
+  id         String   @id @default(cuid())
+  positionId String
+  amount     Decimal
+  receivedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId])
 }
 
 /** A user-defined target allocation, compared against real positions in a later step */

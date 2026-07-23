@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { PageLoader, ErrorMessage } from '@shared/components';
 
 import {
@@ -20,6 +22,7 @@ export default function DashboardPage() {
     isLoading: isPnlLoading,
     isError: isPnlError,
   } = usePortfolioPnlQuery();
+  const [includeDividends, setIncludeDividends] = useState(false);
   const hasNoPositions =
     !!summary &&
     summary.positionCounts.open === 0 &&
@@ -53,9 +56,20 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <h2 className="mb-3 mt-8 text-sm font-semibold uppercase text-ink-faint">
-            Live P&amp;L
-          </h2>
+          <div className="mb-3 mt-8 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase text-ink-faint">
+              Live P&amp;L
+            </h2>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
+              <input
+                type="checkbox"
+                checked={includeDividends}
+                onChange={(event) => setIncludeDividends(event.target.checked)}
+                className="h-4 w-4 accent-brand-accent"
+              />
+              Include dividends
+            </label>
+          </div>
           {isPnlLoading && <PageLoader />}
           {isPnlError && (
             <ErrorMessage message="Could not load live P&L. Cost-basis figures above are still accurate." />
@@ -66,7 +80,11 @@ export default function DashboardPage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {pnl.currencies.map((currency) => (
-                  <CurrencyPnlCard key={currency.currency} summary={currency} />
+                  <CurrencyPnlCard
+                    key={currency.currency}
+                    summary={currency}
+                    includeDividends={includeDividends}
+                  />
                 ))}
               </div>
             ))}

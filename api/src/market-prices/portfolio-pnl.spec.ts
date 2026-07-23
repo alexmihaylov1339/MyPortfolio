@@ -9,6 +9,7 @@ function buildPosition(overrides: Partial<Position> = {}): Position {
     userId: 'user-id',
     broker: Broker.REVOLUT,
     ticker: 'AAPL',
+    exchangeMicCode: null,
     name: null,
     assetType: AssetType.STOCK,
     quantity: new Prisma.Decimal('1'),
@@ -44,6 +45,8 @@ describe('calculatePortfolioPnl', () => {
         currency: 'USD',
         totalCurrentValue: '1500.00',
         totalUnrealizedPnl: '500.00',
+        totalDividends: '0.00',
+        totalReturnPnl: '500.00',
         positions: [
           {
             positionId: 'position-id',
@@ -54,6 +57,9 @@ describe('calculatePortfolioPnl', () => {
             currentValue: '1500.00',
             unrealizedPnl: '500.00',
             unrealizedPnlPercent: '50.00',
+            totalDividends: '0.00',
+            totalReturnPnl: '500.00',
+            totalReturnPnlPercent: '50.00',
           },
         ],
       },
@@ -74,6 +80,8 @@ describe('calculatePortfolioPnl', () => {
       currentValue: '1000.00',
       unrealizedPnl: '-500.00',
       unrealizedPnlPercent: '-33.33',
+      totalReturnPnl: '-500.00',
+      totalReturnPnlPercent: '-33.33',
     });
   });
 
@@ -89,6 +97,8 @@ describe('calculatePortfolioPnl', () => {
     expect(result.currencies[0].positions[0]).toMatchObject({
       unrealizedPnl: '0.00',
       unrealizedPnlPercent: '0.00',
+      totalReturnPnl: '0.00',
+      totalReturnPnlPercent: '0.00',
     });
   });
 
@@ -118,6 +128,8 @@ describe('calculatePortfolioPnl', () => {
       currentValue: null,
       unrealizedPnl: null,
       unrealizedPnlPercent: null,
+      totalReturnPnl: null,
+      totalReturnPnlPercent: null,
     });
   });
 
@@ -163,5 +175,122 @@ describe('calculatePortfolioPnl', () => {
     const result = calculatePortfolioPnl([closedPosition], prices);
 
     expect(result.currencies).toEqual([]);
+  });
+
+  describe('dividends (total return)', () => {
+    it('adds dividends on top of unrealized P&L when a price is available', () => {
+      const position = buildPosition({
+        quantity: new Prisma.Decimal('10'),
+        averageBuyPrice: new Prisma.Decimal('100'),
+      });
+      const prices = new Map([['AAPL', new Prisma.Decimal('150')]]);
+      const dividendTotals = new Map([
+        ['position-id', new Prisma.Decimal('25')],
+      ]);
+
+      const result = calculatePortfolioPnl([position], prices, dividendTotals);
+
+      expect(result.currencies[0].positions[0]).toMatchObject({
+        unrealizedPnl: '500.00',
+        totalDividends: '25.00',
+        // (500 unrealized + 25 dividends) = 525, on a 1000 cost basis = 52.5%
+        totalReturnPnl: '525.00',
+        totalReturnPnlPercent: '52.50',
+      });
+    });
+
+    it('still reports totalDividends when the price is unavailable, but totalReturnPnl stays null', () => {
+      // Dividends are known independent of pricing — showing them is honest.
+      // A combined dollar "total return" figure isn't, since it needs a
+      // current value we don't have (same "never fake it" rule as
+      // unrealizedPnl itself).
+      const position = buildPosition();
+      const dividendTotals = new Map([
+        ['position-id', new Prisma.Decimal('25')],
+      ]);
+
+      const result = calculatePortfolioPnl(
+        [position],
+        new Map(),
+        dividendTotals,
+      );
+
+      expect(result.currencies[0].positions[0]).toMatchObject({
+        currentPrice: null,
+        unrealizedPnl: null,
+        totalDividends: '25.00',
+        totalReturnPnl: null,
+        totalReturnPnlPercent: null,
+      });
+    });
+
+    it('defaults totalDividends to zero for a position with no recorded dividends', () => {
+      const position = buildPosition();
+      const prices = new Map([['AAPL', new Prisma.Decimal('1')]]);
+
+      const result = calculatePortfolioPnl([position], prices);
+
+      expect(result.currencies[0].positions[0].totalDividends).toBe('0.00');
+    });
+
+    it('sums the currency-level totalDividends across every position, priced or not', () => {
+      const priced = buildPosition({
+        id: '1',
+        ticker: 'AAPL',
+        quantity: new Prisma.Decimal('1'),
+        averageBuyPrice: new Prisma.Decimal('1'),
+      });
+      const unpriced = buildPosition({
+        id: '2',
+        ticker: 'MSFT',
+        quantity: new Prisma.Decimal('1'),
+        averageBuyPrice: new Prisma.Decimal('1'),
+      });
+      const prices = new Map([['AAPL', new Prisma.Decimal('1')]]);
+      const dividendTotals = new Map([
+        ['1', new Prisma.Decimal('10')],
+        ['2', new Prisma.Decimal('5')],
+      ]);
+
+      const result = calculatePortfolioPnl(
+        [priced, unpriced],
+        prices,
+        dividendTotals,
+      );
+
+      expect(result.currencies[0].totalDividends).toBe('15.00');
+    });
+
+    it('sums the currency-level totalReturnPnl over priced positions only', () => {
+      const priced = buildPosition({
+        id: '1',
+        ticker: 'AAPL',
+        quantity: new Prisma.Decimal('10'),
+        averageBuyPrice: new Prisma.Decimal('100'),
+      });
+      const unpriced = buildPosition({
+        id: '2',
+        ticker: 'MSFT',
+        quantity: new Prisma.Decimal('1'),
+        averageBuyPrice: new Prisma.Decimal('1'),
+      });
+      const prices = new Map([['AAPL', new Prisma.Decimal('150')]]);
+      const dividendTotals = new Map([
+        ['1', new Prisma.Decimal('20')],
+        ['2', new Prisma.Decimal('5')],
+      ]);
+
+      const result = calculatePortfolioPnl(
+        [priced, unpriced],
+        prices,
+        dividendTotals,
+      );
+
+      // 500 unrealized + 20 dividends for AAPL only — MSFT's 5 in dividends
+      // is reflected in totalDividends but not in totalReturnPnl since it
+      // has no price to base a total on.
+      expect(result.currencies[0].totalReturnPnl).toBe('520.00');
+      expect(result.currencies[0].totalDividends).toBe('25.00');
+    });
   });
 });
