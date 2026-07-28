@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
@@ -10,7 +10,10 @@ export class RebalanceController {
   constructor(private readonly rebalance: RebalanceService) {}
 
   @Get()
-  getComparison(@CurrentUser() user: AuthUser) {
-    return this.rebalance.getComparisonForUser(user.id);
+  getComparison(
+    @CurrentUser() user: AuthUser,
+    @Query('portfolioId') portfolioId?: string,
+  ) {
+    return this.rebalance.getComparisonForUser(user.id, portfolioId);
   }
 }
