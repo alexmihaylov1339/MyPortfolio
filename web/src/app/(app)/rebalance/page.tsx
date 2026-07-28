@@ -3,11 +3,7 @@
 import { PageLoader, ErrorMessage } from '@shared/components';
 
 import { useRebalanceQuery } from '@features/rebalance/hooks';
-import {
-  RebalanceTable,
-  RebalanceEmptyState,
-  ExcludedCurrenciesNote,
-} from '@features/rebalance/components';
+import { RebalanceTable, RebalanceEmptyState } from '@features/rebalance/components';
 
 export default function RebalancePage() {
   const { data, isLoading, isError } = useRebalanceQuery();
@@ -25,15 +21,19 @@ export default function RebalancePage() {
 
       {data && !data.hasDefaultModel && <RebalanceEmptyState />}
 
-      {data && data.hasDefaultModel && (
+      {data && data.hasDefaultModel && data.fxUnavailable && (
+        <ErrorMessage message="Could not convert one of your currencies to a live rate right now — try again shortly." />
+      )}
+
+      {data && data.hasDefaultModel && !data.fxUnavailable && (
         <>
           <p className="mb-2 text-sm text-ink-muted">
-            Comparing against &ldquo;{data.modelName}&rdquo;
+            Comparing against &ldquo;{data.modelName}&rdquo; — all positions
+            converted to {data.baseCurrency}.
           </p>
-          <ExcludedCurrenciesNote currencies={data.excludedCurrencies} />
           <RebalanceTable
             entries={data.entries}
-            currency={data.currency ?? ''}
+            currency={data.baseCurrency ?? ''}
           />
         </>
       )}
