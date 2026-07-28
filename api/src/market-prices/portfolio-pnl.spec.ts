@@ -1,12 +1,17 @@
 import { Broker, AssetType, PositionStatus, Prisma } from '@prisma/client';
 import type { Position } from '@prisma/client';
 
-import { calculatePortfolioPnl } from './portfolio-pnl';
+import {
+  calculatePortfolioPnl,
+  combineCurrencyTotals,
+  type CurrencyPnlSummary,
+} from './portfolio-pnl';
 
 function buildPosition(overrides: Partial<Position> = {}): Position {
   return {
     id: 'position-id',
     userId: 'user-id',
+    portfolioId: 'portfolio-id',
     broker: Broker.REVOLUT,
     ticker: 'AAPL',
     exchangeMicCode: null,
@@ -382,5 +387,77 @@ describe('calculatePortfolioPnl', () => {
 
       expect(result.currencies[0].totalPnlAllPositions).toBe('0.00');
     });
+  });
+});
+
+describe('combineCurrencyTotals', () => {
+  function buildSummary(
+    overrides: Partial<CurrencyPnlSummary> = {},
+  ): CurrencyPnlSummary {
+    return {
+      currency: 'EUR',
+      totalCurrentValue: '1000.00',
+      totalUnrealizedPnl: '100.00',
+      totalDividends: '10.00',
+      totalReturnPnl: '110.00',
+      totalPnlAllPositions: '100.00',
+      totalReturnPnlAllPositions: '110.00',
+      positions: [],
+      ...overrides,
+    };
+  }
+
+  it('returns null for zero currencies', () => {
+    expect(combineCurrencyTotals([], 'EUR', new Map())).toBeNull();
+  });
+
+  it('passes a single base-currency summary through unconverted', () => {
+    const result = combineCurrencyTotals([buildSummary()], 'EUR', new Map());
+
+    expect(result).toMatchObject({
+      currency: 'EUR',
+      totalCurrentValue: '1000.00',
+      totalUnrealizedPnl: '100.00',
+      rates: {},
+    });
+  });
+
+  it('converts a non-base currency using the supplied rate and sums with the base', () => {
+    const eur = buildSummary({
+      currency: 'EUR',
+      totalCurrentValue: '1000.00',
+      totalUnrealizedPnl: '100.00',
+      totalDividends: '0.00',
+      totalReturnPnl: '100.00',
+      totalPnlAllPositions: '100.00',
+      totalReturnPnlAllPositions: '100.00',
+    });
+    const usd = buildSummary({
+      currency: 'USD',
+      totalCurrentValue: '1000.00',
+      totalUnrealizedPnl: '200.00',
+      totalDividends: '0.00',
+      totalReturnPnl: '200.00',
+      totalPnlAllPositions: '200.00',
+      totalReturnPnlAllPositions: '200.00',
+    });
+    const rates = new Map([['USD', new Prisma.Decimal('0.9')]]);
+
+    const result = combineCurrencyTotals([eur, usd], 'EUR', rates);
+
+    // 1000 EUR + (1000 USD * 0.9) = 1900.00
+    expect(result?.totalCurrentValue).toBe('1900.00');
+    // 100 EUR + (200 USD * 0.9) = 280.00
+    expect(result?.totalUnrealizedPnl).toBe('280.00');
+    expect(result?.rates).toEqual({ USD: '0.9' });
+  });
+
+  it('returns null when a rate is missing for a currency actually held, rather than a partial total', () => {
+    const eur = buildSummary({ currency: 'EUR' });
+    const usd = buildSummary({ currency: 'USD' });
+
+    const result = combineCurrencyTotals([eur, usd], 'EUR', new Map());
+
+    expect(result).toBeNull();
   });
 });

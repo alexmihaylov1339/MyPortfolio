@@ -12,4 +12,12 @@ export class MarketPricesSearchController {
   search(@Query('query') query: string | undefined) {
     return this.marketPrices.searchSymbols(query ?? '');
   }
+
+  @Get('lookup')
+  lookup(
+    @Query('ticker') ticker: string,
+    @Query('micCode') micCode: string | undefined,
+  ) {
+    return this.marketPrices.lookupTicker(ticker, micCode);
+  }
 }

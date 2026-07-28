@@ -4,6 +4,8 @@ import { Prisma, PositionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   calculatePortfolioPnl,
+  combineCurrencyTotals,
+  type CombinedPnlTotal,
   type PortfolioPnlResponse,
 } from './portfolio-pnl';
 
@@ -22,6 +24,9 @@ const YAHOO_HEADERS = { 'User-Agent': 'Mozilla/5.0' };
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const MAX_SEARCH_RESULTS = 10;
 const SEARCHABLE_QUOTE_TYPES = new Set(['EQUITY', 'ETF']);
+// The currency every multi-currency portfolio total is converted into —
+// exported so other modules (e.g. rebalance) compare against the same base.
+export const BASE_CURRENCY = 'EUR';
 
 interface CacheEntry {
   price: Prisma.Decimal;
@@ -86,12 +91,17 @@ export class MarketPricesService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPortfolioPnlForUser(userId: string): Promise<PortfolioPnlResponse> {
+  async getPortfolioPnlForUser(
+    userId: string,
+    portfolioId: string,
+  ): Promise<
+    PortfolioPnlResponse & { combinedTotal: CombinedPnlTotal | null }
+  > {
     // Both statuses are fetched — CLOSED positions still need their
     // dividends and their own closePrice-based P&L, they just don't need
     // a live market price (see calculatePortfolioPnl for how each is priced).
     const positions = await this.prisma.position.findMany({
-      where: { userId },
+      where: { userId, portfolioId },
     });
 
     const openPositions = positions.filter(
@@ -107,7 +117,37 @@ export class MarketPricesService {
       positions.map((position) => position.id),
     );
 
-    return calculatePortfolioPnl(positions, prices, dividendTotals);
+    const pnl = calculatePortfolioPnl(positions, prices, dividendTotals);
+
+    const otherCurrencies = pnl.currencies
+      .map((summary) => summary.currency)
+      .filter((currency) => currency !== BASE_CURRENCY);
+    const rateEntries = await Promise.all(
+      otherCurrencies.map(
+        async (currency) =>
+          [currency, await this.getFxRate(currency, BASE_CURRENCY)] as const,
+      ),
+    );
+    const rates = new Map(
+      rateEntries.filter(
+        (entry): entry is [string, Prisma.Decimal] => entry[1] !== null,
+      ),
+    );
+    const combinedTotal = combineCurrencyTotals(
+      pnl.currencies,
+      BASE_CURRENCY,
+      rates,
+    );
+
+    return { ...pnl, combinedTotal };
+  }
+
+  /** Reuses the same fetch/cache/persist/fallback chain as a stock price — Yahoo serves FX pairs via the same chart endpoint (e.g. "USDEUR=X"). */
+  async getFxRate(from: string, to: string): Promise<Prisma.Decimal | null> {
+    if (from === to) {
+      return new Prisma.Decimal(1);
+    }
+    return this.getPrice(`${from}${to}`, `${from}${to}=X`);
   }
 
   private async getDividendTotals(
@@ -238,6 +278,40 @@ export class MarketPricesService {
       );
       return [];
     }
+  }
+
+  /**
+   * Resolves what we can show about a ticker the user doesn't hold a
+   * position in — e.g. a model-target ticker with no real buy yet. Combines
+   * a live price fetch with a search-match for the display name/exchange;
+   * any piece that can't be resolved comes back null rather than guessed.
+   */
+  async lookupTicker(
+    ticker: string,
+    micCode?: string | null,
+  ): Promise<{
+    ticker: string;
+    micCode: string | null;
+    name: string | null;
+    exchange: string | null;
+    price: string | null;
+  }> {
+    const [price, matches] = await Promise.all([
+      this.getPrice(ticker, micCode),
+      this.searchSymbols(micCode || ticker),
+    ]);
+
+    const match = micCode
+      ? matches.find((result) => result.micCode === micCode)
+      : (matches.find((result) => result.symbol === ticker) ?? matches[0]);
+
+    return {
+      ticker,
+      micCode: micCode ?? match?.micCode ?? null,
+      name: match?.name ?? null,
+      exchange: match?.exchange ?? null,
+      price: price ? price.toFixed(2) : null,
+    };
   }
 
   private async fetchPrice(

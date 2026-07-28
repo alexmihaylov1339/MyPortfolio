@@ -37,6 +37,19 @@ export interface CurrencyPnlSummary {
   positions: PositionPnl[];
 }
 
+export interface CombinedPnlTotal {
+  /** The base currency every figure below has been converted into. */
+  currency: string;
+  totalCurrentValue: string;
+  totalUnrealizedPnl: string;
+  totalDividends: string;
+  totalReturnPnl: string;
+  totalPnlAllPositions: string;
+  totalReturnPnlAllPositions: string;
+  /** FX rate used to convert 1 unit of each non-base currency into the base, e.g. { "USD": "0.8792" }. */
+  rates: Record<string, string>;
+}
+
 export interface PortfolioPnlResponse {
   currencies: CurrencyPnlSummary[];
 }
@@ -202,4 +215,68 @@ export function calculatePortfolioPnl(
     });
 
   return { currencies };
+}
+
+const COMBINABLE_FIELDS = [
+  'totalCurrentValue',
+  'totalUnrealizedPnl',
+  'totalDividends',
+  'totalReturnPnl',
+  'totalPnlAllPositions',
+  'totalReturnPnlAllPositions',
+] as const;
+
+/**
+ * Converts every currency's totals into one base currency and sums them,
+ * so a portfolio split across e.g. EUR and USD can show a single "my
+ * total" figure. Requires a live FX rate for every non-base currency
+ * actually held — if even one is missing, returns null rather than a
+ * partial or silently-wrong total ("never fake it", same rule as an
+ * unpriced position).
+ */
+export function combineCurrencyTotals(
+  currencies: CurrencyPnlSummary[],
+  baseCurrency: string,
+  rates: Map<string, Prisma.Decimal>,
+): CombinedPnlTotal | null {
+  if (currencies.length === 0) {
+    return null;
+  }
+
+  const totals = Object.fromEntries(
+    COMBINABLE_FIELDS.map((field) => [field, new Prisma.Decimal(0)]),
+  ) as Record<(typeof COMBINABLE_FIELDS)[number], Prisma.Decimal>;
+  const usedRates: Record<string, string> = {};
+
+  for (const summary of currencies) {
+    const rate =
+      summary.currency === baseCurrency
+        ? new Prisma.Decimal(1)
+        : rates.get(summary.currency);
+
+    if (!rate) {
+      return null;
+    }
+
+    if (summary.currency !== baseCurrency) {
+      usedRates[summary.currency] = rate.toString();
+    }
+
+    for (const field of COMBINABLE_FIELDS) {
+      totals[field] = totals[field].plus(
+        new Prisma.Decimal(summary[field]).times(rate),
+      );
+    }
+  }
+
+  return {
+    currency: baseCurrency,
+    totalCurrentValue: totals.totalCurrentValue.toFixed(2),
+    totalUnrealizedPnl: totals.totalUnrealizedPnl.toFixed(2),
+    totalDividends: totals.totalDividends.toFixed(2),
+    totalReturnPnl: totals.totalReturnPnl.toFixed(2),
+    totalPnlAllPositions: totals.totalPnlAllPositions.toFixed(2),
+    totalReturnPnlAllPositions: totals.totalReturnPnlAllPositions.toFixed(2),
+    rates: usedRates,
+  };
 }
