@@ -19,8 +19,31 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
+  portfolios             Portfolio[]
   positions              Position[]
   models                 ModelPortfolio[]
+}
+
+/**
+ * A named grouping of positions and target-allocation models within a
+ * user's account (e.g. "Personal", "Retirement"). Every user has at least
+ * one — a "Default" portfolio is created automatically the first time one
+ * is needed, so existing single-portfolio accounts kept working through
+ * the migration with zero visible change.
+ */
+model Portfolio {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  positions Position[]
+  models    ModelPortfolio[]
+
+  @@index([userId])
 }
 
 enum Broker {
@@ -42,6 +65,7 @@ enum AssetType {
 model Position {
   id              String         @id @default(cuid())
   userId          String
+  portfolioId     String
 
   broker          Broker
   ticker          String
@@ -63,11 +87,14 @@ model Position {
   updatedAt       DateTime       @updatedAt
 
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio       Portfolio      @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   dividends       Dividend[]
 
   @@index([userId])
   @@index([userId, status])
   @@index([userId, ticker])
+  @@index([portfolioId])
+  @@index([portfolioId, status])
 }
 
 /** A dividend payment received from a position, in that position's currency */
@@ -87,15 +114,18 @@ model Dividend {
 model ModelPortfolio {
   id          String   @id @default(cuid())
   userId      String
+  portfolioId String
   name        String
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio   Portfolio         @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   allocations ModelAllocation[]
 
   @@index([userId])
+  @@index([portfolioId])
 }
 
 /** One ticker's target percentage within a ModelPortfolio */
