@@ -103,6 +103,7 @@ model ModelAllocation {
   id               String  @id @default(cuid())
   modelPortfolioId String
   ticker           String
+  exchangeMicCode  String?
   targetPercent    Decimal
 
   modelPortfolio   ModelPortfolio @relation(fields: [modelPortfolioId], references: [id], onDelete: Cascade)
