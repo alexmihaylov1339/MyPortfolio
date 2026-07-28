@@ -1,5 +1,7 @@
 'use client';
 
+import { TickerAutocomplete } from '@shared/components';
+
 import type { AllocationInput } from '../../services';
 
 interface AllocationRowsEditorProps {
@@ -25,20 +27,28 @@ export default function AllocationRowsEditor({
   const total = sumPercent(rows);
   const isComplete = total === 100;
 
-  const handleRowChange = (
+  const handleTickerChange = (
     index: number,
-    field: keyof AllocationInput,
-    value: string,
+    ticker: string,
+    exchangeMicCode: string | null,
   ) => {
     onChange(
       rows.map((row, rowIndex) =>
-        rowIndex === index ? { ...row, [field]: value } : row,
+        rowIndex === index ? { ...row, ticker, exchangeMicCode } : row,
+      ),
+    );
+  };
+
+  const handlePercentChange = (index: number, targetPercent: string) => {
+    onChange(
+      rows.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, targetPercent } : row,
       ),
     );
   };
 
   const handleAddRow = () => {
-    onChange([...rows, { ticker: '', targetPercent: '' }]);
+    onChange([...rows, { ticker: '', exchangeMicCode: null, targetPercent: '' }]);
   };
 
   const handleRemoveRow = (index: number) => {
@@ -60,23 +70,22 @@ export default function AllocationRowsEditor({
 
       <div className="space-y-2">
         {rows.map((row, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Ticker"
-              value={row.ticker}
-              onChange={(event) =>
-                handleRowChange(index, 'ticker', event.target.value)
-              }
-              className="w-1/2 rounded-[var(--radius-control)] border border-line px-2 py-1 text-sm"
-            />
+          <div key={index} className="flex items-start gap-2">
+            <div className="w-1/2">
+              <TickerAutocomplete
+                label={null}
+                ticker={row.ticker}
+                micCode={row.exchangeMicCode ?? null}
+                onChange={(ticker, exchangeMicCode) =>
+                  handleTickerChange(index, ticker, exchangeMicCode)
+                }
+              />
+            </div>
             <input
               type="number"
               placeholder="%"
               value={row.targetPercent}
-              onChange={(event) =>
-                handleRowChange(index, 'targetPercent', event.target.value)
-              }
+              onChange={(event) => handlePercentChange(index, event.target.value)}
               min={0}
               step="0.01"
               className="w-1/3 rounded-[var(--radius-control)] border border-line px-2 py-1 text-sm"
@@ -85,7 +94,7 @@ export default function AllocationRowsEditor({
               type="button"
               onClick={() => handleRemoveRow(index)}
               disabled={rows.length <= 1}
-              className="cursor-pointer text-sm text-destructive-text hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-1 cursor-pointer text-sm text-destructive-text hover:underline disabled:cursor-not-allowed disabled:opacity-40"
             >
               Remove
             </button>

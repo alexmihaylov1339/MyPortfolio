@@ -4,13 +4,12 @@ import { useState, type ChangeEvent } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { FormBuilder } from '@shared/components';
+import { FormBuilder, TickerAutocomplete } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
 
 import { useCreatePositionMutation, useUpdatePositionMutation } from '../hooks';
 import { usePositionFormFields } from '../hooks/usePositionFormFields';
 import { mapFormValuesToPositionInput } from '../mapFormValuesToPositionInput';
-import TickerAutocomplete from './TickerAutocomplete';
 import type { PositionStatus } from '../../services';
 
 interface PositionFormProps {

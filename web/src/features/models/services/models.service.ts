@@ -8,6 +8,7 @@ const api = ManageService(API_V1_URL);
 export interface ModelAllocation {
   id: string;
   ticker: string;
+  exchangeMicCode: string | null;
   targetPercent: string;
 }
 
@@ -22,6 +23,7 @@ export interface ModelPortfolio {
 
 export interface AllocationInput {
   ticker: string;
+  exchangeMicCode?: string | null;
   targetPercent: string;
 }
 

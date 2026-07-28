@@ -12,6 +12,7 @@ export function toModelFormValues(model: ModelPortfolio): ModelFormValues {
     isDefault: model.isDefault,
     allocations: model.allocations.map((allocation) => ({
       ticker: allocation.ticker,
+      exchangeMicCode: allocation.exchangeMicCode,
       targetPercent: allocation.targetPercent,
     })),
   };

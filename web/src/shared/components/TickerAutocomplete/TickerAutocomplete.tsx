@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
-import { searchTickers, type TickerSearchResult } from '../tickerSearch.service';
+import { searchTickers, type TickerSearchResult } from './tickerSearch.service';
 
 interface TickerAutocompleteProps {
   ticker: string;
   micCode: string | null;
   onChange: (ticker: string, micCode: string | null) => void;
   required?: boolean;
+  /** Omit to render the input without a visible label (e.g. inside a table row). */
+  label?: string | null;
 }
 
 const DEBOUNCE_MS = 300;
@@ -24,7 +26,9 @@ export default function TickerAutocomplete({
   micCode,
   onChange,
   required,
+  label = 'Ticker',
 }: TickerAutocompleteProps) {
+  const inputId = useId();
   const [results, setResults] = useState<TickerSearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,13 +84,18 @@ export default function TickerAutocomplete({
 
   return (
     <div className="mb-[14px]" ref={containerRef}>
-      <label htmlFor="ticker" className="mb-1 block text-[13px] font-semibold text-ink-strong">
-        Ticker
-        {required && <span className="text-destructive-text"> *</span>}
-      </label>
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="mb-1 block text-[13px] font-semibold text-ink-strong"
+        >
+          {label}
+          {required && <span className="text-destructive-text"> *</span>}
+        </label>
+      )}
       <div className="relative">
         <input
-          id="ticker"
+          id={inputId}
           type="text"
           placeholder="AAPL"
           required={required}

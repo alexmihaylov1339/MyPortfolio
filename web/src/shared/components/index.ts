@@ -19,3 +19,6 @@ export { ThemeProvider, useTheme } from './ThemeProvider';
 
 export { default as AppNav } from './AppNav/AppNav';
 export { default as ThemeSwitcher } from './ThemeSwitcher/ThemeSwitcher';
+
+export { TickerAutocomplete } from './TickerAutocomplete';
+export { searchTickers, type TickerSearchResult } from './TickerAutocomplete';
