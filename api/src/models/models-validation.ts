@@ -15,10 +15,12 @@ import { MODEL_ERROR_MESSAGES } from './models-errors';
 
 export interface ValidatedAllocationInput {
   ticker: string;
+  exchangeMicCode?: string;
   targetPercent: string;
 }
 
 export interface ValidatedCreateModelInput {
+  portfolioId?: string;
   name: string;
   isDefault: boolean;
   allocations: ValidatedAllocationInput[];
@@ -63,6 +65,7 @@ function validateAllocations(allocations: unknown): ValidatedAllocationInput[] {
 
     return {
       ticker: allocation.ticker.trim().toUpperCase(),
+      exchangeMicCode: allocation.exchangeMicCode?.trim() || undefined,
       targetPercent: allocation.targetPercent.trim(),
     };
   });
@@ -94,6 +97,7 @@ export function validateCreateModelInput(
   const allocations = validateAllocations(body.allocations);
 
   return {
+    portfolioId: body.portfolioId?.trim() || undefined,
     name: body.name.trim(),
     isDefault: body.isDefault ?? false,
     allocations,

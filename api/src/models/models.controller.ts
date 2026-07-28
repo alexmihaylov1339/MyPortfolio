@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -27,8 +28,11 @@ export class ModelsController {
   constructor(private readonly models: ModelsService) {}
 
   @Get()
-  findAll(@CurrentUser() user: AuthUser) {
-    return this.models.findAllForUser(user.id);
+  findAll(
+    @CurrentUser() user: AuthUser,
+    @Query('portfolioId') portfolioId?: string,
+  ) {
+    return this.models.findAllForUser(user.id, portfolioId);
   }
 
   @Get(':id')

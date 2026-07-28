@@ -1,5 +1,6 @@
 export interface UpdateModelAllocationDto {
   ticker: string;
+  exchangeMicCode?: string;
   targetPercent: string;
 }
 

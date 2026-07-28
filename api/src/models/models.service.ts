@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { PortfoliosService } from '../portfolios/portfolios.service';
 import { MODEL_ERROR_MESSAGES } from './models-errors';
 import type {
   ValidatedCreateModelInput,
@@ -10,11 +11,22 @@ import { toModelResponse, type ModelPortfolioResponse } from './models.helpers';
 
 @Injectable()
 export class ModelsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly portfolios: PortfoliosService,
+  ) {}
 
-  async findAllForUser(userId: string): Promise<ModelPortfolioResponse[]> {
+  async findAllForUser(
+    userId: string,
+    requestedPortfolioId?: string,
+  ): Promise<ModelPortfolioResponse[]> {
+    const portfolioId = await this.portfolios.resolvePortfolioId(
+      userId,
+      requestedPortfolioId,
+    );
+
     const models = await this.prisma.modelPortfolio.findMany({
-      where: { userId },
+      where: { userId, portfolioId },
       include: { allocations: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -34,8 +46,16 @@ export class ModelsService {
     userId: string,
     input: ValidatedCreateModelInput,
   ): Promise<ModelPortfolioResponse> {
+    const portfolioId = await this.portfolios.resolvePortfolioId(
+      userId,
+      input.portfolioId,
+    );
+
+    // "First model in this portfolio is automatically default" — scoped per
+    // portfolio, not per user, so each portfolio gets its own default model
+    // independent of any others.
     const existingCount = await this.prisma.modelPortfolio.count({
-      where: { userId },
+      where: { userId, portfolioId },
     });
     const isFirstModel = existingCount === 0;
     const isDefault = isFirstModel || input.isDefault;
@@ -43,7 +63,7 @@ export class ModelsService {
     const model = await this.prisma.$transaction(async (tx) => {
       if (isDefault) {
         await tx.modelPortfolio.updateMany({
-          where: { userId, isDefault: true },
+          where: { userId, portfolioId, isDefault: true },
           data: { isDefault: false },
         });
       }
@@ -51,11 +71,13 @@ export class ModelsService {
       return tx.modelPortfolio.create({
         data: {
           userId,
+          portfolioId,
           name: input.name,
           isDefault,
           allocations: {
             create: input.allocations.map((allocation) => ({
               ticker: allocation.ticker,
+              exchangeMicCode: allocation.exchangeMicCode,
               targetPercent: allocation.targetPercent,
             })),
           },
@@ -72,12 +94,17 @@ export class ModelsService {
     id: string,
     input: ValidatedUpdateModelInput,
   ): Promise<ModelPortfolioResponse> {
-    await this.getOwnedModelOrThrow(userId, id);
+    const existing = await this.getOwnedModelOrThrow(userId, id);
 
     const model = await this.prisma.$transaction(async (tx) => {
       if (input.isDefault) {
         await tx.modelPortfolio.updateMany({
-          where: { userId, isDefault: true, id: { not: id } },
+          where: {
+            userId,
+            portfolioId: existing.portfolioId,
+            isDefault: true,
+            id: { not: id },
+          },
           data: { isDefault: false },
         });
       }
@@ -100,6 +127,7 @@ export class ModelsService {
                 allocations: {
                   create: input.allocations.map((allocation) => ({
                     ticker: allocation.ticker,
+                    exchangeMicCode: allocation.exchangeMicCode,
                     targetPercent: allocation.targetPercent,
                   })),
                 },

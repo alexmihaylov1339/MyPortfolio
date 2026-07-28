@@ -104,6 +104,23 @@ describe('validateCreateModelInput', () => {
     ).toThrow(BadRequestException);
   });
 
+  it('passes through and trims an exchangeMicCode when provided', () => {
+    const result = validateCreateModelInput({
+      name: 'Growth',
+      allocations: [
+        { ticker: 'DSN', exchangeMicCode: ' DSN.MU ', targetPercent: '100' },
+      ],
+    });
+
+    expect(result.allocations[0].exchangeMicCode).toBe('DSN.MU');
+  });
+
+  it('leaves exchangeMicCode undefined when omitted', () => {
+    const result = validateCreateModelInput(validBody);
+
+    expect(result.allocations[0].exchangeMicCode).toBeUndefined();
+  });
+
   it('respects an explicit isDefault: true', () => {
     const result = validateCreateModelInput({
       ...validBody,
