@@ -31,15 +31,21 @@ export interface CreateModelInput {
   name: string;
   isDefault?: boolean;
   allocations: AllocationInput[];
+  portfolioId?: string;
 }
 
 export type UpdateModelInput = Partial<CreateModelInput>;
 
-export function listModels(): Promise<ModelPortfolio[]> {
-  return api
+export function listModels(portfolioId?: string): Promise<ModelPortfolio[]> {
+  const request = api
     .prepareRequest(MODELS_ENDPOINTS.LIST, HTTP_METHODS.GET)
-    .setHeaders(getAuthHeaders())
-    .execRequest<ModelPortfolio[]>();
+    .setHeaders(getAuthHeaders());
+
+  if (portfolioId) {
+    request.setQueryParams({ portfolioId });
+  }
+
+  return request.execRequest<ModelPortfolio[]>();
 }
 
 export function getModel(id: string): Promise<ModelPortfolio> {

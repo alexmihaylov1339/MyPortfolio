@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 
+import { useSelectedPortfolio } from '@features/portfolios/hooks';
+
 import { getPositionsSummary } from '../services';
 
 // Keyed under the 'positions' cache namespace (not 'dashboard') so the
@@ -9,8 +11,10 @@ import { getPositionsSummary } from '../services';
 // queryKey: ['positions'] }) automatically refreshes this summary too —
 // TanStack Query invalidates by key prefix.
 export function useDashboardSummaryQuery() {
+  const { selectedPortfolioId } = useSelectedPortfolio();
+
   return useQuery({
-    queryKey: ['positions', 'summary'],
-    queryFn: getPositionsSummary,
+    queryKey: ['positions', 'summary', selectedPortfolioId],
+    queryFn: () => getPositionsSummary(selectedPortfolioId ?? undefined),
   });
 }

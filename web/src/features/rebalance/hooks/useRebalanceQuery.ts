@@ -2,6 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 
+import { useSelectedPortfolio } from '@features/portfolios/hooks';
+
 import { getRebalanceComparison } from '../services';
 
 // This view depends on BOTH positions and models data, so — unlike the
@@ -11,9 +13,11 @@ import { getRebalanceComparison } from '../services';
 // always refetch on mount instead of wiring cross-feature invalidation
 // into every positions/models mutation.
 export function useRebalanceQuery() {
+  const { selectedPortfolioId } = useSelectedPortfolio();
+
   return useQuery({
-    queryKey: ['rebalance'],
-    queryFn: getRebalanceComparison,
+    queryKey: ['rebalance', selectedPortfolioId],
+    queryFn: () => getRebalanceComparison(selectedPortfolioId ?? undefined),
     staleTime: 0,
   });
 }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { FormBuilder } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
+import { useSelectedPortfolio } from '@features/portfolios/hooks';
 
 import { useCreateModelMutation, useUpdateModelMutation } from '../hooks';
 import { mapFormValuesToModelInput } from '../mapFormValuesToModelInput';
@@ -27,6 +28,7 @@ export default function ModelForm({
   initialValues,
 }: ModelFormProps) {
   const router = useRouter();
+  const { selectedPortfolio, selectedPortfolioId } = useSelectedPortfolio();
   const [allocations, setAllocations] = useState<AllocationInput[]>(
     initialValues?.allocations && initialValues.allocations.length > 0
       ? initialValues.allocations
@@ -41,7 +43,10 @@ export default function ModelForm({
     const input = mapFormValuesToModelInput(values, allocations);
 
     if (mode === 'create') {
-      await createMutation.mutateAsync(input);
+      await createMutation.mutateAsync({
+        ...input,
+        portfolioId: selectedPortfolioId ?? undefined,
+      });
     } else if (modelId) {
       await updateMutation.mutateAsync({ id: modelId, input });
     }
@@ -56,27 +61,34 @@ export default function ModelForm({
     : null;
 
   return (
-    <FormBuilder<Record<string, string>>
-      fields={[
-        { type: 'text', name: 'name', label: 'Name', required: true },
-        { type: 'checkbox', name: 'isDefault', label: 'Set as default' },
-      ]}
-      onSubmit={handleSubmit}
-      initialValues={
-        initialValues
-          ? { name: initialValues.name, isDefault: initialValues.isDefault }
-          : undefined
-      }
-      errorMessage={error ?? undefined}
-      submitLabel={
-        mutation.isPending
-          ? 'Saving...'
-          : mode === 'create'
-            ? 'Create model'
-            : 'Save changes'
-      }
-    >
-      <AllocationRowsEditor rows={allocations} onChange={setAllocations} />
-    </FormBuilder>
+    <>
+      {mode === 'create' && selectedPortfolio && (
+        <p className="mb-4 text-sm text-ink-muted">
+          Adding to portfolio: <span className="font-medium text-ink-strong">{selectedPortfolio.name}</span>
+        </p>
+      )}
+      <FormBuilder<Record<string, string>>
+        fields={[
+          { type: 'text', name: 'name', label: 'Name', required: true },
+          { type: 'checkbox', name: 'isDefault', label: 'Set as default' },
+        ]}
+        onSubmit={handleSubmit}
+        initialValues={
+          initialValues
+            ? { name: initialValues.name, isDefault: initialValues.isDefault }
+            : undefined
+        }
+        errorMessage={error ?? undefined}
+        submitLabel={
+          mutation.isPending
+            ? 'Saving...'
+            : mode === 'create'
+              ? 'Create model'
+              : 'Save changes'
+        }
+      >
+        <AllocationRowsEditor rows={allocations} onChange={setAllocations} />
+      </FormBuilder>
+    </>
   );
 }

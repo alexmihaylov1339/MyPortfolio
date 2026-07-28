@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { FormBuilder, TickerAutocomplete } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
+import { useSelectedPortfolio } from '@features/portfolios/hooks';
 
 import { useCreatePositionMutation, useUpdatePositionMutation } from '../hooks';
 import { usePositionFormFields } from '../hooks/usePositionFormFields';
@@ -25,6 +26,7 @@ export default function PositionForm({
   initialValues,
 }: PositionFormProps) {
   const router = useRouter();
+  const { selectedPortfolio, selectedPortfolioId } = useSelectedPortfolio();
   const [status, setStatus] = useState<PositionStatus>(
     (initialValues?.status as PositionStatus | undefined) ?? 'OPEN',
   );
@@ -53,7 +55,10 @@ export default function PositionForm({
     });
 
     if (mode === 'create') {
-      await createMutation.mutateAsync(input);
+      await createMutation.mutateAsync({
+        ...input,
+        portfolioId: selectedPortfolioId ?? undefined,
+      });
     } else if (positionId) {
       await updateMutation.mutateAsync({ id: positionId, input });
     }
@@ -69,6 +74,11 @@ export default function PositionForm({
 
   return (
     <div onChange={handleFormChange}>
+      {mode === 'create' && selectedPortfolio && (
+        <p className="mb-4 text-sm text-ink-muted">
+          Adding to portfolio: <span className="font-medium text-ink-strong">{selectedPortfolio.name}</span>
+        </p>
+      )}
       <FormBuilder<Record<string, string>>
         fields={fields}
         onSubmit={handleSubmit}

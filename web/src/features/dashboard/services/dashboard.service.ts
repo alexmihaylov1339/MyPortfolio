@@ -29,11 +29,16 @@ export interface PositionsSummary {
   positionCounts: { open: number; closed: number };
 }
 
-export function getPositionsSummary(): Promise<PositionsSummary> {
-  return api
+export function getPositionsSummary(portfolioId?: string): Promise<PositionsSummary> {
+  const request = api
     .prepareRequest(DASHBOARD_ENDPOINTS.SUMMARY, HTTP_METHODS.GET)
-    .setHeaders(getAuthHeaders())
-    .execRequest<PositionsSummary>();
+    .setHeaders(getAuthHeaders());
+
+  if (portfolioId) {
+    request.setQueryParams({ portfolioId });
+  }
+
+  return request.execRequest<PositionsSummary>();
 }
 
 export interface PositionPnl {

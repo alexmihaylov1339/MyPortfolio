@@ -40,6 +40,7 @@ export type CreatePositionInput = {
   openedAt?: string;
   closedAt?: string;
   closePrice?: string;
+  portfolioId?: string;
 };
 
 export type UpdatePositionInput = Partial<CreatePositionInput> & {
@@ -49,6 +50,7 @@ export type UpdatePositionInput = Partial<CreatePositionInput> & {
 
 export type ListPositionsFilter = {
   status?: PositionStatus;
+  portfolioId?: string;
 };
 
 export function listPositions(filter?: ListPositionsFilter): Promise<Position[]> {
@@ -56,8 +58,15 @@ export function listPositions(filter?: ListPositionsFilter): Promise<Position[]>
     .prepareRequest(POSITIONS_ENDPOINTS.LIST, HTTP_METHODS.GET)
     .setHeaders(getAuthHeaders());
 
+  const queryParams: Record<string, string> = {};
   if (filter?.status) {
-    request.setQueryParams({ status: filter.status });
+    queryParams.status = filter.status;
+  }
+  if (filter?.portfolioId) {
+    queryParams.portfolioId = filter.portfolioId;
+  }
+  if (Object.keys(queryParams).length > 0) {
+    request.setQueryParams(queryParams);
   }
 
   return request.execRequest<Position[]>();

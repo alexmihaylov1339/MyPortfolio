@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { APP_ROUTES } from '@shared/constants';
+import { PortfolioSwitcher } from '@features/portfolios/components';
 import ThemeSwitcher from '../ThemeSwitcher/ThemeSwitcher';
 
 const NAV_LINKS = [
@@ -23,6 +24,7 @@ export default function AppNav() {
         <span className="text-sm font-semibold text-brand-ink [font-family:var(--font-display)]">
           MyPortfolio
         </span>
+        <PortfolioSwitcher />
         <ul className="flex gap-5">
           {NAV_LINKS.map((link) => {
             const isActive =
