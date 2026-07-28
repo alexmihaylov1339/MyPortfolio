@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { DividendsModule } from './dividends/dividends.module';
 import { MarketPricesModule } from './market-prices/market-prices.module';
 import { ModelsModule } from './models/models.module';
+import { PortfoliosModule } from './portfolios/portfolios.module';
 import { PositionsModule } from './positions/positions.module';
 import { PrismaModule } from './prisma.module';
 import { RebalanceModule } from './rebalance/rebalance.module';
@@ -14,6 +15,7 @@ import { RebalanceModule } from './rebalance/rebalance.module';
   imports: [
     PrismaModule,
     AuthModule,
+    PortfoliosModule,
     // MarketPricesModule is registered before PositionsModule so its literal
     // GET /positions/pnl route is matched before PositionsController's
     // GET /positions/:id — Express matches routes in registration order.
