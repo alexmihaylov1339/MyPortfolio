@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -34,6 +34,9 @@ export default function PositionForm({
   const [exchangeMicCode, setExchangeMicCode] = useState<string | null>(
     initialValues?.exchangeMicCode || null,
   );
+  // Tracks our own last auto-fill so a later ticker pick can update the name
+  // field, while any value the user typed themselves is never overwritten.
+  const lastAutoFilledNameRef = useRef('');
 
   const fields = usePositionFormFields(status);
   const createMutation = useCreatePositionMutation();
@@ -88,9 +91,23 @@ export default function PositionForm({
           <TickerAutocomplete
             ticker={ticker}
             micCode={exchangeMicCode}
-            onChange={(nextTicker, nextMicCode) => {
+            onChange={(nextTicker, nextMicCode, matchedName) => {
               setTicker(nextTicker);
               setExchangeMicCode(nextMicCode);
+
+              if (matchedName) {
+                const nameInput = document.getElementById(
+                  'name',
+                ) as HTMLInputElement | null;
+                if (
+                  nameInput &&
+                  (nameInput.value === '' ||
+                    nameInput.value === lastAutoFilledNameRef.current)
+                ) {
+                  nameInput.value = matchedName;
+                  lastAutoFilledNameRef.current = matchedName;
+                }
+              }
             }}
             required
           />

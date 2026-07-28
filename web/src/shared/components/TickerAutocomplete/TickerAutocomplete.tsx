@@ -7,7 +7,7 @@ import { searchTickers, type TickerSearchResult } from './tickerSearch.service';
 interface TickerAutocompleteProps {
   ticker: string;
   micCode: string | null;
-  onChange: (ticker: string, micCode: string | null) => void;
+  onChange: (ticker: string, micCode: string | null, name?: string) => void;
   required?: boolean;
   /** Omit to render the input without a visible label (e.g. inside a table row). */
   label?: string | null;
@@ -125,7 +125,7 @@ export default function TickerAutocomplete({
                   key={`${result.symbol}-${result.micCode}`}
                   type="button"
                   onClick={() => {
-                    onChange(result.symbol, result.micCode);
+                    onChange(result.symbol, result.micCode, result.name);
                     setIsOpen(false);
                   }}
                   className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-sm transition hover:bg-surface-soft"
