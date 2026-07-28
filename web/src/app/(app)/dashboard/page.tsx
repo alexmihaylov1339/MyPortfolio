@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { PageLoader, ErrorMessage } from '@shared/components';
+import { PageLoader, ErrorMessage, ToggleSwitch } from '@shared/components';
+import { usePersistedToggle } from '@shared/hooks';
 
 import {
   useDashboardSummaryQuery,
@@ -11,9 +12,9 @@ import {
 import {
   CurrencySummaryCard,
   CurrencyPnlCard,
+  CombinedPnlCard,
   PositionCountsSummary,
   DashboardEmptyState,
-  ToggleSwitch,
   type TickerPriceInfo,
 } from '@features/dashboard/components';
 
@@ -24,8 +25,14 @@ export default function DashboardPage() {
     isLoading: isPnlLoading,
     isError: isPnlError,
   } = usePortfolioPnlQuery();
-  const [includeDividends, setIncludeDividends] = useState(false);
-  const [includeClosedPositions, setIncludeClosedPositions] = useState(false);
+  const [includeDividends, setIncludeDividends] = usePersistedToggle(
+    'dashboard:includeDividends',
+    false,
+  );
+  const [includeClosedPositions, setIncludeClosedPositions] = usePersistedToggle(
+    'dashboard:includeClosedPositions',
+    false,
+  );
   const hasNoPositions =
     !!summary &&
     summary.positionCounts.open === 0 &&
@@ -101,6 +108,13 @@ export default function DashboardPage() {
               />
             </div>
           </div>
+          {pnl?.combinedTotal && (
+            <CombinedPnlCard
+              combinedTotal={pnl.combinedTotal}
+              includeDividends={includeDividends}
+              includeClosedPositions={includeClosedPositions}
+            />
+          )}
           {isPnlLoading && <PageLoader />}
           {isPnlError && (
             <ErrorMessage message="Could not load live P&L. Cost-basis figures above are still accurate." />

@@ -7,5 +7,6 @@ export {
   getPortfolioPnl,
   type PortfolioPnl,
   type CurrencyPnlSummary,
+  type CombinedPnlTotal,
   type PositionPnl,
 } from './dashboard.service';

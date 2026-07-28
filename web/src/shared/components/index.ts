@@ -22,3 +22,5 @@ export { default as ThemeSwitcher } from './ThemeSwitcher/ThemeSwitcher';
 
 export { TickerAutocomplete } from './TickerAutocomplete';
 export { searchTickers, type TickerSearchResult } from './TickerAutocomplete';
+
+export { ToggleSwitch } from './ToggleSwitch';

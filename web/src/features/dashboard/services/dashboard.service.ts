@@ -62,13 +62,31 @@ export interface CurrencyPnlSummary {
   positions: PositionPnl[];
 }
 
-export interface PortfolioPnl {
-  currencies: CurrencyPnlSummary[];
+export interface CombinedPnlTotal {
+  currency: string;
+  totalCurrentValue: string;
+  totalUnrealizedPnl: string;
+  totalDividends: string;
+  totalReturnPnl: string;
+  totalPnlAllPositions: string;
+  totalReturnPnlAllPositions: string;
+  rates: Record<string, string>;
 }
 
-export function getPortfolioPnl(): Promise<PortfolioPnl> {
-  return api
+export interface PortfolioPnl {
+  currencies: CurrencyPnlSummary[];
+  /** Null when a currency you hold is missing a live FX rate — never a partial/wrong total. */
+  combinedTotal: CombinedPnlTotal | null;
+}
+
+export function getPortfolioPnl(portfolioId?: string): Promise<PortfolioPnl> {
+  const request = api
     .prepareRequest(DASHBOARD_ENDPOINTS.PNL, HTTP_METHODS.GET)
-    .setHeaders(getAuthHeaders())
-    .execRequest<PortfolioPnl>();
+    .setHeaders(getAuthHeaders());
+
+  if (portfolioId) {
+    request.setQueryParams({ portfolioId });
+  }
+
+  return request.execRequest<PortfolioPnl>();
 }

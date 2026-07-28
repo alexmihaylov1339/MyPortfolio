@@ -1,3 +1,5 @@
+'use client';
+
 interface ToggleSwitchProps {
   label: string;
   checked: boolean;
