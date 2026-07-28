@@ -7,6 +7,7 @@ function buildPosition(overrides: Partial<Position> = {}): Position {
   return {
     id: 'position-id',
     userId: 'user-id',
+    portfolioId: 'portfolio-id',
     broker: Broker.REVOLUT,
     ticker: 'AAPL',
     name: null,

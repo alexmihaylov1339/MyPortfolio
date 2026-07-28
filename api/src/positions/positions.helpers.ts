@@ -2,6 +2,7 @@ import type { Position } from '@prisma/client';
 
 export interface PositionResponse {
   id: string;
+  portfolioId: string;
   broker: string;
   ticker: string;
   exchangeMicCode?: string;
@@ -21,6 +22,7 @@ export interface PositionResponse {
 export function toPositionResponse(position: Position): PositionResponse {
   return {
     id: position.id,
+    portfolioId: position.portfolioId,
     broker: position.broker,
     ticker: position.ticker,
     exchangeMicCode: position.exchangeMicCode ?? undefined,

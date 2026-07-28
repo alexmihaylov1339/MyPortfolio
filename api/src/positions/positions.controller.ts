@@ -34,13 +34,16 @@ export class PositionsController {
     @CurrentUser() user: AuthUser,
     @Query() query: ListPositionsQueryDto,
   ) {
-    const { status } = validateListPositionsQuery(query);
-    return this.positions.findAllForUser(user.id, status);
+    const { status, portfolioId } = validateListPositionsQuery(query);
+    return this.positions.findAllForUser(user.id, status, portfolioId);
   }
 
   @Get('summary')
-  getSummary(@CurrentUser() user: AuthUser) {
-    return this.positions.getSummaryForUser(user.id);
+  getSummary(
+    @CurrentUser() user: AuthUser,
+    @Query('portfolioId') portfolioId?: string,
+  ) {
+    return this.positions.getSummaryForUser(user.id, portfolioId);
   }
 
   @Get(':id')

@@ -9,6 +9,7 @@ import type { UpdatePositionDto } from './dto/update-position.dto';
 import { POSITION_ERROR_MESSAGES } from './positions-errors';
 
 export interface ValidatedPositionInput {
+  portfolioId?: string;
   broker: Broker;
   ticker: string;
   exchangeMicCode?: string;
@@ -40,6 +41,7 @@ export interface ValidatedPositionUpdateInput {
 
 export interface ValidatedPositionListQuery {
   status?: PositionStatus;
+  portfolioId?: string;
 }
 
 function isPositiveDecimalString(value: unknown): value is string {
@@ -142,6 +144,7 @@ export function validateCreatePositionInput(
   }
 
   return {
+    portfolioId: body.portfolioId?.trim() || undefined,
     broker: body.broker,
     ticker: body.ticker.trim().toUpperCase(),
     exchangeMicCode: body.exchangeMicCode?.trim() || undefined,
@@ -268,13 +271,15 @@ export function validateUpdatePositionInput(
 export function validateListPositionsQuery(
   query: ListPositionsQueryDto,
 ): ValidatedPositionListQuery {
+  const portfolioId = query.portfolioId?.trim() || undefined;
+
   if (isUndefined(query.status) || query.status === '') {
-    return {};
+    return { portfolioId };
   }
 
   if (!isPositionStatus(query.status)) {
     throw new BadRequestException(POSITION_ERROR_MESSAGES.statusInvalid);
   }
 
-  return { status: query.status };
+  return { status: query.status, portfolioId };
 }

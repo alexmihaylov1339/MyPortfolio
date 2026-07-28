@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { PositionStatus } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { PortfoliosService } from '../portfolios/portfolios.service';
 import { POSITION_ERROR_MESSAGES } from './positions-errors';
 import {
   calculatePositionsSummary,
@@ -15,23 +16,40 @@ import { toPositionResponse, type PositionResponse } from './positions.helpers';
 
 @Injectable()
 export class PositionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly portfolios: PortfoliosService,
+  ) {}
 
   async findAllForUser(
     userId: string,
     status?: PositionStatus,
+    requestedPortfolioId?: string,
   ): Promise<PositionResponse[]> {
+    const portfolioId = await this.portfolios.resolvePortfolioId(
+      userId,
+      requestedPortfolioId,
+    );
+
     const positions = await this.prisma.position.findMany({
-      where: { userId, ...(status ? { status } : {}) },
+      where: { userId, portfolioId, ...(status ? { status } : {}) },
       orderBy: { createdAt: 'desc' },
     });
 
     return positions.map(toPositionResponse);
   }
 
-  async getSummaryForUser(userId: string): Promise<PositionsSummaryResponse> {
+  async getSummaryForUser(
+    userId: string,
+    requestedPortfolioId?: string,
+  ): Promise<PositionsSummaryResponse> {
+    const portfolioId = await this.portfolios.resolvePortfolioId(
+      userId,
+      requestedPortfolioId,
+    );
+
     const positions = await this.prisma.position.findMany({
-      where: { userId },
+      where: { userId, portfolioId },
     });
 
     return calculatePositionsSummary(positions);
@@ -46,9 +64,15 @@ export class PositionsService {
     userId: string,
     input: ValidatedPositionInput,
   ): Promise<PositionResponse> {
+    const portfolioId = await this.portfolios.resolvePortfolioId(
+      userId,
+      input.portfolioId,
+    );
+
     const position = await this.prisma.position.create({
       data: {
         userId,
+        portfolioId,
         broker: input.broker,
         ticker: input.ticker,
         exchangeMicCode: input.exchangeMicCode,
