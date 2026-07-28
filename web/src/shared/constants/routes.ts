@@ -11,6 +11,10 @@ export const APP_ROUTES = {
   positions: '/positions',
   newPosition: '/positions/new',
   positionEdit: (id: string) => `/positions/${id}/edit`,
+  positionDetail: (ticker: string, micCode?: string | null) =>
+    micCode
+      ? `/positions/detail/${encodeURIComponent(ticker)}?mic=${encodeURIComponent(micCode)}`
+      : `/positions/detail/${encodeURIComponent(ticker)}`,
   models: '/models',
   newModel: '/models/new',
   modelEdit: (id: string) => `/models/${id}/edit`,

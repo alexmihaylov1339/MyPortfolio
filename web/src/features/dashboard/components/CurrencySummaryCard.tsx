@@ -1,3 +1,7 @@
+import Link from 'next/link';
+
+import { APP_ROUTES } from '@shared/constants';
+
 import type { CurrencySummary } from '../services';
 
 export interface TickerPriceInfo {
@@ -31,7 +35,12 @@ export default function CurrencySummaryCard({ summary, tickerPriceInfo }: Curren
               return (
                 <li key={entry.ticker} className="flex justify-between gap-2">
                   <div>
-                    <div>{entry.ticker}</div>
+                    <Link
+                      href={APP_ROUTES.positionDetail(entry.ticker)}
+                      className="hover:underline"
+                    >
+                      {entry.ticker}
+                    </Link>
                     {priceInfo && (
                       <div className="text-xs text-ink-faint">
                         {priceInfo.quantity} sh

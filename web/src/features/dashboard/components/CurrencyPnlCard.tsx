@@ -1,3 +1,7 @@
+import Link from 'next/link';
+
+import { APP_ROUTES } from '@shared/constants';
+
 import { aggregatePositionsByTicker } from '../aggregatePositionsByTicker';
 import type { CurrencyPnlSummary } from '../services';
 
@@ -65,7 +69,12 @@ export default function CurrencyPnlCard({
             <li key={`${row.ticker}-${row.status}`} className="flex items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-ink-strong">{row.ticker}</span>
+                  <Link
+                    href={APP_ROUTES.positionDetail(row.ticker)}
+                    className="font-medium text-ink-strong hover:underline"
+                  >
+                    {row.ticker}
+                  </Link>
                   {row.status === 'CLOSED' && (
                     <span className="rounded-full bg-surface-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">
                       Closed

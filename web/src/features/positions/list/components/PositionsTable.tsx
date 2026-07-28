@@ -86,7 +86,14 @@ export default function PositionsTable({
           const pnl = pnlByPositionId?.get(position.id);
           return (
             <tr key={position.id} className="border-b border-line-soft">
-              <td className="py-2 pr-4">{position.ticker}</td>
+              <td className="py-2 pr-4">
+                <Link
+                  href={APP_ROUTES.positionDetail(position.ticker)}
+                  className="text-brand hover:underline"
+                >
+                  {position.ticker}
+                </Link>
+              </td>
               <td className="py-2 pr-4">{position.broker}</td>
               <td className="py-2 pr-4">{position.quantity}</td>
               <td className="py-2 pr-4">
