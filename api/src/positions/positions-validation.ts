@@ -51,6 +51,17 @@ function isPositiveDecimalString(value: unknown): value is string {
   return Number.isFinite(parsed) && parsed > 0;
 }
 
+// Average buy price is the one exception that can legitimately be zero —
+// e.g. shares received as a broker sign-up bonus, with no cash paid for them.
+function isNonNegativeDecimalString(value: unknown): value is string {
+  if (!hasTrimmedText(value)) {
+    return false;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
 function isBroker(value: unknown): value is Broker {
   return (
     hasTrimmedText(value) && (Object.values(Broker) as string[]).includes(value)
@@ -100,7 +111,7 @@ export function validateCreatePositionInput(
     throw new BadRequestException(POSITION_ERROR_MESSAGES.quantityInvalid);
   }
 
-  if (!isPositiveDecimalString(body.averageBuyPrice)) {
+  if (!isNonNegativeDecimalString(body.averageBuyPrice)) {
     throw new BadRequestException(
       POSITION_ERROR_MESSAGES.averageBuyPriceInvalid,
     );
@@ -195,7 +206,7 @@ export function validateUpdatePositionInput(
   }
 
   if (!isUndefined(body.averageBuyPrice)) {
-    if (!isPositiveDecimalString(body.averageBuyPrice)) {
+    if (!isNonNegativeDecimalString(body.averageBuyPrice)) {
       throw new BadRequestException(
         POSITION_ERROR_MESSAGES.averageBuyPriceInvalid,
       );

@@ -43,6 +43,24 @@ describe('validateCreatePositionInput', () => {
     },
   );
 
+  it('accepts a zero averageBuyPrice (e.g. a free bonus share)', () => {
+    const result = validateCreatePositionInput({
+      ...validBody,
+      averageBuyPrice: '0',
+    });
+
+    expect(result.averageBuyPrice).toBe('0');
+  });
+
+  it.each(['-5', 'abc', ''])(
+    'rejects an invalid averageBuyPrice %p',
+    (averageBuyPrice) => {
+      expect(() =>
+        validateCreatePositionInput({ ...validBody, averageBuyPrice }),
+      ).toThrow(BadRequestException);
+    },
+  );
+
   it('requires closedAt when status is CLOSED', () => {
     expect(() =>
       validateCreatePositionInput({
