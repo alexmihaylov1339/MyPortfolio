@@ -1,5 +1,4 @@
-import { ManageService, HTTP_METHODS } from '@shared/services';
-import { API_V1_URL } from '@/services/config';
+import { ManageService, HTTP_METHODS, API_V1_URL } from '@shared/services';
 
 import { AUTH_ENDPOINTS } from '../constants';
 

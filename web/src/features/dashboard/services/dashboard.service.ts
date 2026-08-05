@@ -1,5 +1,4 @@
-import { ManageService, HTTP_METHODS, getAuthHeaders } from '@shared/services';
-import { API_V1_URL } from '@/services/config';
+import { ManageService, HTTP_METHODS, getAuthHeaders, API_V1_URL } from '@shared/services';
 
 import { DASHBOARD_ENDPOINTS } from '../constants';
 

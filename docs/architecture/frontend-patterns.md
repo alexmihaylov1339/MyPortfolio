@@ -9,6 +9,7 @@
 5. Use `FormBuilder` every time a form is needed in the project.
 6. Prefer small components instead of large page files. Reuse is beneficial, but readability and separation of responsibilities come first even for feature-local single-use components.
 6a. Prefer feature-based folder architecture for all frontend work. Organise by owning feature/page flow first, not by broad technical type.
+6b. Do not create top-level technical-type folders directly under `web/src/` (e.g. a bare `services/`, `utils/`, `components/`, `helpers/` at the root). Every file belongs under `features/<feature>/` or `shared/`. If a generic-looking folder like this already exists, that is a sign leftover code needs to be merged into `shared/` or moved into the owning feature — not extended.
 7. Extract a custom hook when page/component logic includes orchestration concerns such as query handling, derived state, submit flows, event coordination, modal state, or other non-trivial UI logic.
 8. Follow SOLID, but do not force abstractions where a simpler solution is clearer. Prefer practical SOLID over theoretical purity.
 9. Prefer clarity over aggressive DRY. Duplicate small, stable code when abstraction would make the flow harder to understand.
