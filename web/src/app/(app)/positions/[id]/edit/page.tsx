@@ -4,9 +4,12 @@ import { useParams } from 'next/navigation';
 
 import { PageLoader, ErrorMessage } from '@shared/components';
 
-import { PositionForm, DividendsSection } from '@features/positions/form/components';
-import { usePositionQuery } from '@features/positions/form/hooks';
-import { toPositionFormValues } from '@features/positions/form/positionFormValues';
+import {
+  PositionForm,
+  DividendsSection,
+  usePositionQuery,
+  toPositionFormValues,
+} from '@features/positions';
 
 export default function EditPositionPage() {
   const params = useParams<{ id: string }>();

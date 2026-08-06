@@ -2,8 +2,7 @@
 
 import { GuestOnlyRoute } from '@/shared/components/AuthProvider';
 
-import { AuthShell } from '@features/auth/components';
-import { RegisterForm } from '@features/auth/register/components';
+import { AuthShell, RegisterForm } from '@features/auth';
 
 export default function RegisterPage() {
   return (

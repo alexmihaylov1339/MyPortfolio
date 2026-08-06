@@ -1,5 +1,5 @@
 import type { Position } from '@features/positions/services';
-import type { PositionPnl } from '@features/dashboard/services';
+import type { PositionPnl } from '@features/dashboard';
 
 export interface TickerDetailLot {
   positionId: string;

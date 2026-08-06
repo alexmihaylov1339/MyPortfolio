@@ -2,8 +2,7 @@
 
 import { GuestOnlyRoute } from '@/shared/components/AuthProvider';
 
-import { AuthShell } from '@features/auth/components';
-import { ForgotPasswordForm } from '@features/auth/forgot-password/components';
+import { AuthShell, ForgotPasswordForm } from '@features/auth';
 
 export default function ForgotPasswordPage() {
   return (

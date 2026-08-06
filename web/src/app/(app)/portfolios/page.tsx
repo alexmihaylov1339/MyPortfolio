@@ -1,6 +1,6 @@
 'use client';
 
-import { PortfoliosManager } from '@features/portfolios/components';
+import { PortfoliosManager } from '@features/portfolios';
 
 export default function PortfoliosPage() {
   return (

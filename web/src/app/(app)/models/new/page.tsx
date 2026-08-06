@@ -1,6 +1,6 @@
 'use client';
 
-import { ModelForm } from '@features/models/form/components';
+import { ModelForm } from '@features/models';
 
 export default function NewModelPage() {
   return (

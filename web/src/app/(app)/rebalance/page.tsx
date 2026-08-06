@@ -2,8 +2,7 @@
 
 import { PageLoader, ErrorMessage } from '@shared/components';
 
-import { useRebalanceQuery } from '@features/rebalance/hooks';
-import { RebalanceTable, RebalanceEmptyState } from '@features/rebalance/components';
+import { useRebalanceQuery, RebalanceTable, RebalanceEmptyState } from '@features/rebalance';
 
 export default function RebalancePage() {
   const { data, isLoading, isError } = useRebalanceQuery();

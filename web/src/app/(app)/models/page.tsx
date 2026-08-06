@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { PageLoader, ErrorMessage } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
 
-import { useModelsQuery, useDeleteModelWithConfirmation } from '@features/models/list/hooks';
-import { ModelsList } from '@features/models/list/components';
+import { useModelsQuery, useDeleteModelWithConfirmation, ModelsList } from '@features/models';
 
 export default function ModelsPage() {
   const { data: models, isLoading, isError } = useModelsQuery();

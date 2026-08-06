@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { FormBuilder } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
-import { useSelectedPortfolio } from '@features/portfolios/hooks';
+import { useSelectedPortfolio } from '@features/portfolios';
 
 import { useCreateModelMutation, useUpdateModelMutation } from '../hooks';
 import { mapFormValuesToModelInput } from '../mapFormValuesToModelInput';

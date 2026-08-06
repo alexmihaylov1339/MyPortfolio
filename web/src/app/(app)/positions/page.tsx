@@ -7,11 +7,14 @@ import Link from 'next/link';
 import { PageLoader, ErrorMessage } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
 
-import { usePositionsQuery, useDeletePositionWithConfirmation } from '@features/positions/list/hooks';
-import { PositionsTable, PositionsFilter } from '@features/positions/list/components';
-import type { PositionStatus } from '@features/positions/services';
-import { usePortfolioPnlQuery } from '@features/dashboard/hooks';
-import type { PositionPnl } from '@features/dashboard/services';
+import {
+  usePositionsQuery,
+  useDeletePositionWithConfirmation,
+  PositionsTable,
+  PositionsFilter,
+  type PositionStatus,
+} from '@features/positions';
+import { usePortfolioPnlQuery, type PositionPnl } from '@features/dashboard';
 
 export default function PositionsPage() {
   const [statusFilter, setStatusFilter] = useState<PositionStatus | undefined>(undefined);

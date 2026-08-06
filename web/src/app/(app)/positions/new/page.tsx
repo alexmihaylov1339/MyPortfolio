@@ -1,6 +1,6 @@
 'use client';
 
-import { PositionForm } from '@features/positions/form/components';
+import { PositionForm } from '@features/positions';
 
 export default function NewPositionPage() {
   return (

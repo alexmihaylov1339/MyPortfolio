@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { useSelectedPortfolio } from '@features/portfolios/hooks';
+import { useSelectedPortfolio } from '@features/portfolios';
 
 import { listModels } from '../../services';
 

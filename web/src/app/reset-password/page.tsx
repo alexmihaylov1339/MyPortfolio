@@ -8,8 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { GuestOnlyRoute } from '@/shared/components/AuthProvider';
 import { APP_ROUTES } from '@/shared/constants';
 
-import { AuthShell } from '@features/auth/components';
-import { ResetPasswordForm } from '@features/auth/reset-password/components';
+import { AuthShell, ResetPasswordForm } from '@features/auth';
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();

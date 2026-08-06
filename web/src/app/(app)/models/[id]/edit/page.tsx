@@ -4,9 +4,7 @@ import { useParams } from 'next/navigation';
 
 import { PageLoader, ErrorMessage } from '@shared/components';
 
-import { ModelForm } from '@features/models/form/components';
-import { useModelQuery } from '@features/models/form/hooks';
-import { toModelFormValues } from '@features/models/form/mapModelToFormValues';
+import { ModelForm, useModelQuery, toModelFormValues } from '@features/models';
 
 export default function EditModelPage() {
   const params = useParams<{ id: string }>();

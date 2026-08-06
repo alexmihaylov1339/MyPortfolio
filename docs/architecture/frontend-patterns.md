@@ -23,6 +23,7 @@
 17. Always use `web/src/shared/components/FormBuilder/` for any form. Never build an ad-hoc form shell when `FormBuilder` fits the task.
 17a. Colocate components, hooks, mappers, feature constants, small feature types, and tests with the feature they primarily serve.
 17b. Favor high cohesion over broad shared folders. Move code to `shared/` only when it is a stable primitive or is truly reused across multiple features.
+
 17c. Keep coupling low between features. Do not import another feature's deep internals when a small public API, shared helper, or explicit service boundary would be cleaner.
 
 ## Additional Rules
@@ -77,6 +78,10 @@
 43. Avoid deep relative paths (`../../../`); use aliases when available (`@/`, `@shared/`).
 
 44. Do not import from another feature's internal files directly; expose a public API (index file) if sharing is needed.
+
+44a. Every feature must expose exactly one root `index.ts` (e.g. `features/positions/index.ts`). Cross-feature imports (and page-level imports) must always go through this root barrel (`@features/<feature>`), never through a sub-path (`@features/<feature>/hooks`, `@features/<feature>/form/components`), even if that sub-path already has its own `index.ts`. Sub-folder barrels still exist and are fine for imports *within* the same feature — the root-only rule applies specifically at the feature boundary. Do not add a top-level, non-`features/`/non-`shared/` folder (see 6b) as a workaround for something that belongs behind a feature's root barrel instead.
+
+44b. The root barrel must use explicit named exports (`export { X, Y } from './hooks';`), never `export * from './hooks';`. A feature's public API is exactly the names listed in its root `index.ts` — no more. Sub-folder/sub-flow barrels one level down (`hooks/index.ts`, `form/index.ts`, etc.) may use `export *` freely, since they are internal aggregation only the root barrel itself consumes, not a boundary another feature or page reaches across. When adding something new to a feature, it stays private by default; only add it to the root barrel once another feature or a page actually needs it (rule 36 — proof of reuse, not speculative exposure).
 
 ## Formatting
 

@@ -3,8 +3,7 @@
 import { useMemo } from 'react';
 
 import { usePositionsQuery } from '@features/positions/list/hooks';
-import { usePortfolioPnlQuery } from '@features/dashboard/hooks';
-import type { PositionPnl } from '@features/dashboard/services';
+import { usePortfolioPnlQuery, type PositionPnl } from '@features/dashboard';
 
 import { buildTickerDetail, type TickerDetail } from '../buildTickerDetail';
 

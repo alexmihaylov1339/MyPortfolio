@@ -8,15 +8,13 @@ import { usePersistedToggle } from '@shared/hooks';
 import {
   useDashboardSummaryQuery,
   usePortfolioPnlQuery,
-} from '@features/dashboard/hooks';
-import {
   CurrencySummaryCard,
   CurrencyPnlCard,
   CombinedPnlCard,
   PositionCountsSummary,
   DashboardEmptyState,
   type TickerPriceInfo,
-} from '@features/dashboard/components';
+} from '@features/dashboard';
 
 export default function DashboardPage() {
   const { data: summary, isLoading, isError } = useDashboardSummaryQuery();

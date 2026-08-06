@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { APP_ROUTES } from '@shared/constants';
-import type { PositionPnl } from '@features/dashboard/services';
+import type { PositionPnl } from '@features/dashboard';
 
 import type { Position } from '../../services';
 

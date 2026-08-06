@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { FormBuilder, TickerAutocomplete } from '@shared/components';
 import { APP_ROUTES } from '@shared/constants';
-import { useSelectedPortfolio } from '@features/portfolios/hooks';
+import { useSelectedPortfolio } from '@features/portfolios';
 
 import { useCreatePositionMutation, useUpdatePositionMutation } from '../hooks';
 import { usePositionFormFields } from '../hooks/usePositionFormFields';

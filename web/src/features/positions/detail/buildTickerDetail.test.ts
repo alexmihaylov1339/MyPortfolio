@@ -1,6 +1,6 @@
 import { buildTickerDetail } from './buildTickerDetail';
 import type { Position } from '@features/positions/services';
-import type { PositionPnl } from '@features/dashboard/services';
+import type { PositionPnl } from '@features/dashboard';
 
 function buildPosition(overrides: Partial<Position> = {}): Position {
   return {

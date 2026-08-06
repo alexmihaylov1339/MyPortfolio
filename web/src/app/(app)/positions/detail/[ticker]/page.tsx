@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams } from 'next/navigation';
 
-import { TickerDetailView } from '@features/positions/detail/components';
+import { TickerDetailView } from '@features/positions';
 
 export default function PositionDetailPage() {
   const params = useParams<{ ticker: string }>();

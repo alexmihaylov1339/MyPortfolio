@@ -2,8 +2,7 @@
 
 import { GuestOnlyRoute } from '@/shared/components/AuthProvider';
 
-import { AuthShell } from '@features/auth/components';
-import { LoginForm } from '@features/auth/login/components';
+import { AuthShell, LoginForm } from '@features/auth';
 
 export default function LoginPage() {
   return (

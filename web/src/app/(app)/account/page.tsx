@@ -1,6 +1,6 @@
 'use client';
 
-import { LogoutButton, UpdateAccountForm } from '@features/auth/account/components';
+import { LogoutButton, UpdateAccountForm } from '@features/auth';
 
 export default function AccountPage() {
   return (

@@ -24,6 +24,8 @@
 17b. Favor high cohesion over broad shared folders. Move backend logic into shared/common only when it is truly reused across multiple feature modules.
 17c. Keep coupling low between backend features. Do not reach into another module's deep internals when a small exported helper, explicit service boundary, or shared contract would be cleaner.
 
+17d. A module's `@Module({ exports: [...] })` array is its public API — the backend equivalent of a frontend feature's root `index.ts` barrel. Only export what other modules are meant to consume (e.g. a service), never providers that exist purely for the module's own internal use. Import the owning module (not a bare relative path to its service file) so consumption always goes through the declared `exports`, not an accidental deep reach.
+
 ## Additional Rules
 
 18. One file should have one clear responsibility. If a file starts mixing HTTP concerns, persistence, validation, mapping, or response shaping, split it.
