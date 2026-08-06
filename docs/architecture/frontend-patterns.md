@@ -24,6 +24,9 @@
 17a. Colocate components, hooks, mappers, feature constants, small feature types, and tests with the feature they primarily serve.
 17b. Favor high cohesion over broad shared folders. Move code to `shared/` only when it is a stable primitive or is truly reused across multiple features.
 
+17b-i. "Reused across multiple features" means an actual second consumer exists today, not a plausible future one. If something added to `shared/` turns out to have only ever had one real consumer, move it into that feature instead of leaving it — being wrong about reuse isn't a violation, leaving it uncorrected once noticed is. App-shell singletons that don't belong to any feature's domain (root layout/providers like theme, auth session, query client, toast host, top nav) are a separate, legitimate category of `shared/` — judge them by "does this belong to a feature," not by import count, since they inherently mount once.
+
+17b-ii. When touching a `shared/` file for another reason, check whether its exports still have a real consumer. An export with zero consumers anywhere is dead code — delete it rather than leaving it "in case it's needed later" (see rule 36).
 17c. Keep coupling low between features. Do not import another feature's deep internals when a small public API, shared helper, or explicit service boundary would be cleaner.
 
 ## Additional Rules

@@ -1,7 +1,6 @@
 'use client';
 
-import { usePersistedPortfolioId } from '@shared/hooks';
-
+import { usePersistedPortfolioId } from './usePersistedPortfolioId';
 import { usePortfoliosQuery } from './usePortfoliosQuery';
 import type { Portfolio } from '../services';
 

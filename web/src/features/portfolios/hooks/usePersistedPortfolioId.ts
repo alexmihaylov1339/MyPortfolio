@@ -1,6 +1,6 @@
 'use client';
 
-import { usePersistedValue } from './usePersistedValue';
+import { usePersistedValue } from '@shared/hooks';
 
 const PORTFOLIO_ID_KEY = 'selectedPortfolioId';
 
